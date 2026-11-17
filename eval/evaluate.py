@@ -196,16 +196,24 @@ def gen_template_questions(kb: KnowledgeBase):
     return qs
 
 
+LLM_SETS = {"llm_questions.jsonl": "llm", "llm_questions_1125_new.jsonl": "llm_new"}  # file -> set prefix
+
+
 def load_llm(kb: KnowledgeBase):
-    p = ROOT / "eval" / "llm_questions.jsonl"
-    if not p.exists():
-        return []
+    """LLM-written natural questions (gold = 1-based line in the current data file)."""
     out = []
-    for ln in p.read_text(encoding="utf-8").splitlines():
-        if ln.strip():
-            d = json.loads(ln)
-            out.append({"q": d["q"], "line": int(d["line"]), "set": f"llm_{d.get('style', 'x')}",
-                        "answer": d.get("answer", ""), "alts": []})
+    for fname, prefix in LLM_SETS.items():
+        p = ROOT / "eval" / fname
+        if not p.exists():
+            continue
+        for ln in p.read_text(encoding="utf-8").splitlines():
+            if ln.strip():
+                d = json.loads(ln)
+                if not 1 <= int(d["line"]) <= kb.n_lines or (d.get("answer") and d["answer"].replace(",", "")
+                                                              not in kb.lines[int(d["line"]) - 1].replace(",", "")):
+                    continue  # stale question (data changed)
+                out.append({"q": d["q"], "line": int(d["line"]), "set": f"{prefix}_{d.get('style', 'x')}",
+                            "answer": d.get("answer", ""), "alts": []})
     return out
 
 
@@ -214,22 +222,24 @@ def evaluate(kb: KnowledgeBase, questions, ks=(1, 3, 5, 10)):
     K = max(ks)
     per_set = defaultdict(lambda: {"n": 0, **{f"strict@{k}": 0 for k in ks}, **{f"lenient@{k}": 0 for k in ks}})
     misses = defaultdict(list)
+    alts_ok = lambda c, alts, ans: (c.record_id in alts) or (len(ans) >= 3 and ans.replace(",", "") in c.text.replace(",", ""))  # noqa: E731
     for q in questions:
-        hits = kb.search(q["q"], top_k=K)
-        strict_rank = next((r for r, (c, _) in enumerate(hits, 1) if c.line_start <= q["line"] <= c.line_end), None)
         alts = set(q.get("alts") or [])
         ans = (q.get("answer") or "").strip()
-        len_rank = strict_rank
-        for r, (c, _) in enumerate(hits, 1):
-            ok = (c.record_id in alts) or (len(ans) >= 3 and ans.replace(",", "") in c.text.replace(",", ""))
-            if ok and (len_rank is None or r < len_rank):
-                len_rank = r
-                break
         s = per_set[q["set"]]
         s["n"] += 1
+        # search with each k exactly as a client would (top_k=k), since entity-linked rows take the tail slots
         for k in ks:
-            s[f"strict@{k}"] += strict_rank is not None and strict_rank <= k
-            s[f"lenient@{k}"] += len_rank is not None and len_rank <= k
+            hk = kb.search(q["q"], top_k=k)
+            s[f"strict@{k}"] += any(c.line_start <= q["line"] <= c.line_end for c, _ in hk)
+            s[f"lenient@{k}"] += any((c.line_start <= q["line"] <= c.line_end) or alts_ok(c, alts, ans) for c, _ in hk)
+        hits = kb.search(q["q"], top_k=K)
+        strict_rank = next((r for r, (c, _) in enumerate(hits, 1) if c.line_start <= q["line"] <= c.line_end), None)
+        len_rank = strict_rank
+        for r, (c, _) in enumerate(hits, 1):
+            if alts_ok(c, alts, ans) and (len_rank is None or r < len_rank):
+                len_rank = r
+                break
         if strict_rank is None or strict_rank > 5:
             misses[q["set"]].append({**q, "got": [c.chunk_id for c, _ in hits[:5]], "strict_rank": strict_rank,
                                      "lenient_rank": len_rank})

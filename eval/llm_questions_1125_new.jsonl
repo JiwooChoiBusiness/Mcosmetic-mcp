@@ -1,0 +1,80 @@
+{"q": "라온코스메틱 11 최현우 팀장이 11월 25일에 베리어 크림 견적을 요청했는데 몇 개를 요청했어?", "answer": "1,200개", "line": 526, "style": "paraphrase", "section": 10}
+{"q": "다온코스메틱 14가 11월 25일에 보낸 베리어 세럼 추가 주문 메일이 바로 처리되지 않고 확인 필요 상태가 된 이유가 뭐야?", "answer": "희망 납기", "line": 579, "style": "paraphrase", "section": 10}
+{"q": "온유코스메틱 13이 이미 등록된 글로우 세럼 주문의 수량을 얼마에서 얼마로 바꿔 달라고 했어?", "answer": "600EA에서 800EA", "line": 622, "style": "paraphrase", "section": 10}
+{"q": "개인 네이버 메일로 하이드라 크림 견적을 요청한 다온 구매팀 이준호 씨는 납품 희망일을 언제로 적었어?", "answer": "12월 15일", "line": 778, "style": "paraphrase", "section": 10}
+{"q": "누리코스메틱 12 배성민 씨가 11월 25일에 보낸 시카 세럼 주문이 ERP에 등록되지 못한 사유는?", "answer": "응답 시간 초과", "line": 892, "style": "paraphrase", "section": 10}
+{"q": "다온뷰티 04 한지우 과장의 '요청드린 자료 관련' 메일을 AI가 업무 유형으로 분류하지 못한 이유는 뭐야?", "answer": "품목, 주문번호", "line": 836, "style": "paraphrase", "section": 10}
+{"q": "누리뷰티 02가 11월 25일에 카밍 세럼을 재주문하면서 지난번과 같은 조건이라고 한 단가는 얼마야?", "answer": "9,500원", "line": 1007, "style": "paraphrase", "section": 10}
+{"q": "누리리테일 22 강태호 과장이 밸런스 크림 추가 재고를 문의하면서 몇 개를 요청했어?", "answer": "800개", "line": 678, "style": "paraphrase", "section": 10}
+{"q": "11월 4주차 화장품 원료 시장 동향 뉴스레터에서 세라마이드 원료 공급 상황은 어떻다고 했어?", "answer": "안정", "line": 743, "style": "paraphrase", "section": 10}
+{"q": "10월 5주차 원료 시장 동향 뉴스레터에서 히알루론산 원료 가격은 전주 대비 어떻게 변했다고 해?", "answer": "3% 상승", "line": 15808, "style": "paraphrase", "section": 10}
+{"q": "누리글로벌 32 김도윤 주임이 시카 세럼 1,000개 견적을 요청하면서 납품지로 적은 주소는?", "answer": "인천광역시 서구 북항로 120", "line": 13340, "style": "paraphrase", "section": 10}
+{"q": "연말 기획전용 카밍 크림 견적을 요청한 다온리테일 24 오세린 매니저가 희망한 납품일은 언제야?", "answer": "12월 5일", "line": 14130, "style": "paraphrase", "section": 10}
+{"q": "누리코스메틱 12 윤서아 대리의 하이드라 크림 재고 문의에 회신된 현재 가용 재고는 얼마야?", "answer": "3,700EA", "line": 14202, "style": "paraphrase", "section": 10}
+{"q": "온유글로벌 33 Sarah Kim이 카밍 워시오프 마스크 1,500개 재고를 확인해 달라고 한 이유는?", "answer": "holiday promotion", "line": 15122, "style": "paraphrase", "section": 10}
+{"q": "누리글로벌 32가 하이드라 크림 견적 건을 진행하지 않기로 한 이유가 뭐야?", "answer": "예산 조정", "line": 15334, "style": "paraphrase", "section": 10}
+{"q": "온유코스메틱 13에게 10월에 제시한 카밍 세럼 300EA 견적의 유효기간은 언제까지야?", "answer": "11월 30일", "line": 14939, "style": "paraphrase", "section": 10}
+{"q": "다온코스메틱 14에 베리어 세럼 500EA 견적을 회신하면서 안내한 가장 빠른 납품 가능일은 언제야?", "answer": "11월 29일", "line": 15953, "style": "paraphrase", "section": 10}
+{"q": "다온리테일 24가 시카 세럼 600EA를 문의했을 때 즉시 공급 가능하다고 안내받은 수량은 얼마야?", "answer": "100EA", "line": 16950, "style": "paraphrase", "section": 10}
+{"q": "E-1101 메일의 ERP 출하 조회 결과에 나온 송장번호는 뭐야?", "answer": "HJ-4091-1540-4982", "line": 359, "style": "literal", "section": 10}
+{"q": "E-1102 메일의 ERP 출하내역 조회 결과 주문 상태(state)는 뭐야?", "answer": "배송 중", "line": 422, "style": "literal", "section": 10}
+{"q": "E-1103 메일에는 누가 담당자로 배정되어 있어?", "answer": "김영업", "line": 435, "style": "literal", "section": 10}
+{"q": "E-1114 메일의 Next step은 뭐야?", "answer": "메일 재발송", "line": 1059, "style": "literal", "section": 10}
+{"q": "INV-20261030-00126 인보이스의 합계 금액은 얼마야?", "answer": "10,450,000원", "line": 13414, "style": "literal", "section": 10}
+{"q": "INV-20261102-00128 인보이스의 합계 금액은 얼마야?", "answer": "5,819,000원", "line": 13750, "style": "literal", "section": 10}
+{"q": "INV-20261027-00124 인보이스 합계가 얼마지?", "answer": "3,135,000원", "line": 13977, "style": "literal", "section": 10}
+{"q": "INV-20261024-00122 인보이스의 합계 금액은?", "answer": "8,131,200원", "line": 14455, "style": "literal", "section": 10}
+{"q": "INV-20261017-00102 인보이스 합계 금액은 얼마야?", "answer": "9,715,200원", "line": 16064, "style": "literal", "section": 10}
+{"q": "E-4080 메일에서 안내한 Sales Order 번호는?", "answer": "SO-20261124-00133", "line": 13166, "style": "literal", "section": 10}
+{"q": "E-4072 메일로 안내된 Sales Order 번호가 뭐야?", "answer": "SO-20261119-00132", "line": 13643, "style": "literal", "section": 10}
+{"q": "E-4012 메일에 적힌 송장번호는?", "answer": "HJ-5531-0098-1142", "line": 17136, "style": "literal", "section": 10}
+{"q": "E-4009 메일에서 안내한 송장번호가 뭐야?", "answer": "CJ-6120-4458-9921", "line": 17287, "style": "literal", "section": 10}
+{"q": "E-4066 메일에서 SO-20261112-00131 주문의 납품 예정일은 언제라고 했어?", "answer": "11월 28일", "line": 14572, "style": "literal", "section": 10}
+{"q": "E-4070 메일의 카밍 크림 1,000EA 기준 단가는?", "answer": "10,560원", "line": 14015, "style": "literal", "section": 10}
+{"q": "E-4063 메일의 하이드라 세럼 300EA 기준 단가는 얼마야?", "answer": "10,260원", "line": 14830, "style": "literal", "section": 10}
+{"q": "E-4022 메일에서 글로우 토너 500EA 기준 단가는 얼마라고 했어?", "answer": "6,440원", "line": 16802, "style": "literal", "section": 10}
+{"q": "11월 25일 누리뷰티 02 카밍 세럼 재주문 건의 업무 Case 상태는 뭐야?", "answer": "ERP 전송대기", "line": 17301, "style": "paraphrase", "section": 11}
+{"q": "고객사가 확정되지 않은 하이드라 크림 500EA 견적 Case의 담당자는 누구로 지정돼 있어?", "answer": "이수진", "line": 17326, "style": "paraphrase", "section": 11}
+{"q": "누리리테일 22의 밸런스 크림 800EA 재고 조회에서 확인된 가용 재고는 얼마야?", "answer": "2,100EA", "line": 17352, "style": "paraphrase", "section": 11}
+{"q": "라온코스메틱 11 베리어 크림 1,200EA 견적 건에서 ERP 단가 조회로 나온 적용단가는 얼마야?", "answer": "11,260원", "line": 17392, "style": "paraphrase", "section": 11}
+{"q": "누리글로벌 32 시카 세럼 주문등록이 11월 24일에 처음 실패했을 때 오류 내용은 뭐였어?", "answer": "ERP API Timeout", "line": 17418, "style": "paraphrase", "section": 11}
+{"q": "다온뷰티 04 글로우 토너 견적 Case에서 수량이 2000에서 2500으로 바뀐 일시는 언제야?", "answer": "2026-11-20 09:05", "line": 17443, "style": "paraphrase", "section": 11}
+{"q": "11월 25일 다온리테일 24의 카밍 크림 출하 문의에 대한 ERP 조회 결과는 어땠어?", "answer": "출하예정 2026-12-03", "line": 17488, "style": "paraphrase", "section": 11}
+{"q": "온유글로벌 33 카밍 워시오프 마스크 1,500개 주문 Case에 적용된 단가는 얼마야?", "answer": "7040", "line": 17585, "style": "paraphrase", "section": 11}
+{"q": "라온코스메틱 11 글로우 크림 200EA 인보이스 요청을 ERP에서 조회했을 때 합계 금액은 얼마야?", "answer": "2,728,000원", "line": 17648, "style": "paraphrase", "section": 11}
+{"q": "다온코스메틱 14 베리어 세럼 500EA 건의 출하내역 조회 결과 출하 예정일은 언제야?", "answer": "2026-12-04", "line": 17682, "style": "paraphrase", "section": 11}
+{"q": "ORD-2026-00137 케이스의 Sales Order 번호는?", "answer": "SO-20261112-00131", "line": 17533, "style": "literal", "section": 11}
+{"q": "RFQ-2026-00133 케이스의 현재 status는 뭐야?", "answer": "인보이스 요청 접수", "line": 17625, "style": "literal", "section": 11}
+{"q": "RFQ-2026-00136 Case에서 ERP 단가 조회 시 확인된 재고는 얼마야?", "answer": "4,500EA", "line": 17564, "style": "literal", "section": 11}
+{"q": "ORD-2026-00143 케이스의 unitPrice는 얼마야?", "answer": "10930", "line": 17369, "style": "literal", "section": 11}
+{"q": "RFQ-2026-00139 케이스의 lastUpdatedDate는 언제야?", "answer": "2026-11-25 11:59", "line": 17473, "style": "literal", "section": 11}
+{"q": "ORD-2026-00124의 11월 25일 ERP 출하내역 조회 결과에 나온 Tracking 번호는?", "answer": "HJ-4091-1540-4982", "line": 17911, "style": "literal", "section": 11}
+{"q": "RFQ-2026-00127의 수량 변경(changes) 항목에 기록된 sourceEmailId는?", "answer": "E-1106", "line": 18055, "style": "literal", "section": 11}
+{"q": "RFQ-2026-00129 케이스의 status는 뭐야?", "answer": "ERP 전송 실패", "line": 18128, "style": "literal", "section": 11}
+{"q": "INQ-2026-00040의 ERP 재고 조회 결과(가용/요청 수량)는?", "answer": "가용 100EA / 요청 600EA", "line": 18229, "style": "literal", "section": 11}
+{"q": "RFQ-2026-00141 케이스에 연결된 Sales Order 번호는?", "answer": "SO-20261124-00133", "line": 17408, "style": "literal", "section": 11}
+{"q": "글로우 토너 150g의 현재 재고 수량은 몇 개야?", "answer": "5200", "line": 145, "style": "paraphrase", "section": 5}
+{"q": "카밍 세럼 50g의 납기 가능일(Lead date)은 언제로 되어 있어?", "answer": "2026-12-17", "line": 104, "style": "paraphrase", "section": 5}
+{"q": "밸런스 크림 50g 재고는 몇 개야?", "answer": "2700", "line": 127, "style": "paraphrase", "section": 5}
+{"q": "MC-CAL-MK100의 Lead date는 언제야?", "answer": "2026-12-11", "line": 140, "style": "literal", "section": 5}
+{"q": "MC-BAR-CR050의 Back lead date는?", "answer": "2027-01-03", "line": 159, "style": "literal", "section": 5}
+{"q": "SO-20261124-00133의 현재 state는 뭐야?", "answer": "생산 계획", "line": 222, "style": "literal", "section": 8}
+{"q": "SO-20261107-00130의 tracking 번호는?", "answer": "CJ-2914-4393-1348", "line": 225, "style": "literal", "section": 8}
+{"q": "SO-20261105-00129의 shipDate는 언제야?", "answer": "2026-11-18", "line": 226, "style": "literal", "section": 8}
+{"q": "다온리테일 24가 주문한 카밍 크림 1,000개는 언제 출하 예정으로 잡혀 있어?", "answer": "2026-12-03", "line": 223, "style": "paraphrase", "section": 8}
+{"q": "누리리테일 22의 밸런스 크림 600개 주문은 지금 어떤 상태야?", "answer": "출하 준비", "line": 224, "style": "paraphrase", "section": 8}
+{"q": "다온코스메틱 14가 주문한 베리어 세럼 500개의 출하 예정일은 언제야?", "answer": "2026-12-04", "line": 227, "style": "paraphrase", "section": 8}
+{"q": "누리글로벌 32가 주문한 베리어 크림 300개 건의 송장번호는 뭐야?", "answer": "LT-4950-5304-2060", "line": 236, "style": "paraphrase", "section": 8}
+{"q": "SO-20261030-00126의 송장번호(tracking)는?", "answer": "LT-2958-1000-6999", "line": 229, "style": "literal", "section": 8}
+{"q": "11월 25일 대시보드 기준으로 그날 수신된 메일은 몇 건이야?", "answer": "14", "line": 268, "style": "paraphrase", "section": 9}
+{"q": "Dashboard 스냅샷의 Cumulative outgoing emails는 몇 건이야?", "answer": "140", "line": 285, "style": "literal", "section": 9}
+{"q": "이 스냅샷 기준 전체 업무 Case는 모두 몇 건이야?", "answer": "78", "line": 287, "style": "paraphrase", "section": 9}
+{"q": "주문등록 유형에서 error 상태인 건수는 몇 건이야?", "answer": "error=1", "line": 276, "style": "paraphrase", "section": 9}
+{"q": "Dashboard의 AI confidence 95% 이상 자동분류 건수는?", "answer": "153", "line": 290, "style": "literal", "section": 9}
+{"q": "ERR-0011의 오류 메시지는 뭐야?", "answer": "SMTP 451 Temporary failure", "line": 19594, "style": "literal", "section": 12}
+{"q": "ERR-0010의 담당자(assignee)는 누구야?", "answer": "정하늘", "line": 19595, "style": "literal", "section": 12}
+{"q": "11월 24일에 난 누리글로벌 32의 ERP 주문등록 오류는 언제 해결됐어?", "answer": "2026-11-24 11:00", "line": 19596, "style": "paraphrase", "section": 12}
+{"q": "11월 25일 오후 2시에 이메일 발송 실패 오류가 난 고객사는 어디야?", "answer": "온유리테일 23", "line": 19594, "style": "paraphrase", "section": 12}
+{"q": "Notifications의 count 값은 얼마야?", "answer": "6", "line": 19607, "style": "literal", "section": 13}
+{"q": "알림 triage 목록에서 온유코스메틱 13의 수량 변경 요청 건은 어떤 상태로 표시돼?", "answer": "확인 필요", "line": 19613, "style": "paraphrase", "section": 13}
+{"q": "Notifications triage에서 E-1110의 status는 뭐야?", "answer": "미분류", "line": 19615, "style": "literal", "section": 13}

@@ -20,7 +20,21 @@ from typing import Any, Iterable
 
 from .gloss import gloss
 
-DEFAULT_DATA = Path(__file__).resolve().parent.parent / "data" / "ai365-Mcosmetic-knowledge-updated_2026-10-22.txt"
+DEFAULT_DATA = Path(__file__).resolve().parent.parent / "data" / "ai365-Mcosmetic-knowledge-updated_2026-11-25.txt"
+
+
+def data_path() -> Path:
+    return Path(os.environ.get("COSMETIC_KB_FILE") or DEFAULT_DATA)
+
+
+def read_snapshot_date(path: str | os.PathLike | None = None) -> str:
+    """'Snapshot date: YYYY-MM-DD' from the file header."""
+    with open(path or data_path(), encoding="utf-8") as fh:
+        for _ in range(10):
+            m = re.match(r"^Snapshot date:\s*(\d{4}-\d{2}-\d{2})", fh.readline())
+            if m:
+                return m.group(1)
+    return ""
 
 UNDERLINE_RE = re.compile(r"^(-{5,}|={5,})\s*$")
 SECTION_TITLE_RE = re.compile(r"^(\d+)\.\s+(.+?)\s*$")
@@ -88,6 +102,8 @@ SYNONYMS: list[tuple[str, str]] = [
     ("초안", "draft"), ("발송 시각", "sentat"), ("발송 시간", "sentat"), ("메시지 ID", "messageid"),
     ("처리 흐름", "processing flow erp result"), ("ERP 결과", "erpresult"), ("입고", "inbounddate"),
     ("청구", "billto"), ("주문일", "orderdate"), ("변경 사항", "detected changes changed kept"),
+    ("유형에서", "work type summary 업무 유형별 요약"), ("유형별", "work type summary 업무 유형별 요약"),
+    ("건수", "total 건수 집계 대시보드"), ("몇 건", "total 건수 집계"), ("송장번호", "tracking"),
     ("요청한", "request"), ("요청 사항", "request"), ("요청사항", "request"), ("출하 예정", "shipdate state"),
 ]
 
@@ -199,10 +215,11 @@ class Case:
 # --------------------------------------------------------------------------- knowledge base
 class KnowledgeBase:
     def __init__(self, path: str | os.PathLike | None = None):
-        self.path = Path(path or os.environ.get("COSMETIC_KB_FILE") or DEFAULT_DATA)
+        self.path = Path(path) if path else data_path()
         raw = self.path.read_text(encoding="utf-8")
         self.lines: list[str] = raw.splitlines()
         self.n_lines = len(self.lines)
+        self.snapshot_date = read_snapshot_date(self.path)
         self.sections: list[Section] = []
         self.chunks: list[Chunk] = []
         self.emails: dict[str, Email] = {}

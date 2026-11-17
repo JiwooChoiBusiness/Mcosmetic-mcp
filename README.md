@@ -11,7 +11,7 @@ short_description: MCP server answering questions on the M Cosmetic dataset
 
 # M Cosmetic Knowledge MCP
 
-`ai365-Mcosmetic-knowledge-updated_2026-10-22.txt`(14,062행, 약 510KB) 전체를 AI가 검색·조회해서
+`ai365-Mcosmetic-knowledge-updated_2026-11-25.txt`(19,638행, 약 750KB, 2026-11-25 기준) 전체를 AI가 검색·조회해서
 **데이터셋에 있는 모든 내용에 근거를 달아 답하도록** 만든 MCP 서버입니다.
 외부 AI(서버 URL 방식, Streamable HTTP)와 Claude Code(stdio) 둘 다 연결할 수 있습니다.
 
@@ -19,7 +19,9 @@ short_description: MCP server answering questions on the M Cosmetic dataset
 
 ```
 MCP_Cosmetic/
-  data/ai365-Mcosmetic-knowledge-updated_2026-10-22.txt   원본 데이터 (복사본)
+  data/ai365-Mcosmetic-knowledge-updated_2026-11-25.txt   현재 데이터 (11/25 기준, 서버가 사용)
+  data/ai365-Mcosmetic-knowledge-updated_2026-10-22.txt   원본 데이터 (10/22 기준, 보관)
+  scripts/build_snapshot_1125.py  10/22 원본을 이어 11/25 데이터를 만드는 생성기
   cosmetic_kb/kb.py       파서 + 한국어 BM25 검색 + 구조화 레코드
   cosmetic_kb/gloss.py    영어 본문용 한국어 용어집(색인 시에만 사용)
   cosmetic_kb/server.py   MCP 서버 (도구 15개, stdio / HTTP)
@@ -36,8 +38,8 @@ MCP_Cosmetic/
   .mcp.json               Claude Code 연결 설정 (git 제외)
 ```
 
-데이터 구조: 섹션 0~15, 이메일 226건(E-xxxx), 업무 Case 63건(RFQ 37 / ORD 14 / INQ 12),
-품목 12, 고객 12(연락처·서명 포함), Sales Order 27, 처리 오류 7, 알림, 데모 시나리오, 대시보드.
+데이터 구조(11/25): 섹션 0~15, 이메일 324건(수신 184 / 발신 140), 업무 Case 78건(RFQ 45 / ORD 18 / INQ 15),
+품목 12, 고객 12(연락처·서명 포함), Sales Order 42, 처리 오류 10(미해결 2), 알림, 데모 시나리오, 대시보드.
 
 ## 2. 도구 (외부 AI 화면의 "Tools" 표에 그대로 보입니다)
 
@@ -46,8 +48,8 @@ MCP_Cosmetic/
 | `ask_knowledge` | **기본 도구.** 아무 질문이나 받아 근거 원문(섹션·행 번호)과 관련 레코드를 돌려줌 | question, top_k |
 | `search_knowledge` | 키워드/자연어 검색 (섹션·종류 필터 가능) | query, top_k, section, kind |
 | `get_record` | ID나 이름으로 레코드 전체 조회 (E-, RFQ/ORD/INQ-, SO-, MC-, CUST-, ERR-, T-, 고객명·품목명) | record_id |
-| `find_emails` | 이메일 226건 조건 검색 + 개수·분포 (몇 건? 어떤 메일?) | customer, classification, direction, status, date_from/to, item, assignee … |
-| `find_cases` | Case 63건 조건 검색 + 개수·분포 | customer, case_type, status, done, item, sales_order … |
+| `find_emails` | 이메일 전체(324건) 조건 검색 + 개수·분포 (몇 건? 어떤 메일?) | customer, classification, direction, status, date_from/to, item, assignee … |
+| `find_cases` | Case 전체(78건) 조건 검색 + 개수·분포 | customer, case_type, status, done, item, sales_order … |
 | `lookup_master` | 마스터/참조 표 전체 또는 키워드 필터 | table, keyword |
 | `grep_text` | 원문 전체에서 정확한 문구 찾기 (행 번호) | pattern, regex, max_hits |
 | `read_lines` | 원문 행 범위 그대로 읽기 | start_line, end_line |
@@ -89,7 +91,7 @@ python -m venv .venv
 > 주의: Vercel이 배포마다 만드는 긴 주소(`mcosmetic-xxxx-choi-902a.vercel.app`)는 Vercel 로그인 보호가 걸려 있어
 > 외부 AI가 접속할 수 없습니다. 항상 프로젝트 기본 주소 `mcosmetic.vercel.app`을 쓰세요.
 > 배포 확인: `python tests/e2e_check.py https://mcosmetic.vercel.app/mcp`
-| 설명 | M코스메틱 이메일 에이전트 지식 데이터(2026-10-22 스냅샷) 검색·조회 |
+| 설명 | M코스메틱 이메일 에이전트 지식 데이터(2026-11-25 기준) 검색·조회 |
 
 외부 AI는 인터넷(클라우드)에서 접속하므로 **내 PC의 localhost 주소로는 연결되지 않습니다.** 다음 중 하나가 필요합니다.
 0. **GitHub + Vercel (무료, 현재 선택한 방식):** Vercel 무료(Hobby) 요금제가 `app.py`의 `app`을 서버리스 함수로 실행합니다.
@@ -108,24 +110,26 @@ python -m venv .venv
 이 폴더(`MCP_Cosmetic`)에서 Claude Code를 열면 `.mcp.json`의 `mcosmetic-knowledge` 서버를 승인하라는 창이 뜹니다. 승인하면 끝.
 (`.mcp.json`은 절대경로를 쓰므로 다른 폴더로 옮기면 경로를 고치세요.)
 
-## 5. 검증 결과 (2026-11-17)
+## 5. 검증 결과 (2026-11-18, 11/25 데이터)
 
-`python -m eval.evaluate` — 질문 6,709개, 검색 1.6ms/질문. "strict@k" = 정답이 있는 원문 행을 포함한 결과가 상위 k개 안에 있음.
+`python -m eval.evaluate` — 질문 9,185개. "@k" = 정답이 있는 원문 행을 포함한 결과가 상위 k개 안에 있음(클라이언트처럼 top_k=k로 검색).
 
 | 질문 세트 | 개수 | @1 | @3 | @5 | @10 |
 |---|---|---|---|---|---|
-| LLM이 쓴 자연어 질문 – 직접형 | 111 | 92.8% | 100% | **100%** | 100% |
-| LLM이 쓴 자연어 질문 – 바꿔 말하기(ID 없음) | 109 | 67.0% | 96.3% | **98.2%** | 99.1% |
-| 템플릿 질문 – 이메일 식별/본문/담당자 | 678 | – | – | 94.7~99.6% | 100% |
-| 템플릿 질문 – Case 상태/요청/액션 | 182 | – | – | 96.8~100% | 100% |
-| 템플릿 질문 – 마스터(품목·고객·연락처·SO·오류) | 145 | 64.8% | 91.0% | **94.5%** | 100% |
-| 원문의 고유한 모든 행을 그 내용으로 검색 | 2,742 | 66.2% | 90.2% | 94.1% | 97.8% |
-| 위 행을 단어 40% 삭제·순서 섞어 검색(스트레스) | 2,742 | 55.7% | 80.9% | 86.3% | 92.1% |
+| 별도 LLM이 쓴 자연어 질문 – 직접형 (10/22 내용) | 80 | 93.8% | 100% | **100%** | 100% |
+| 별도 LLM이 쓴 자연어 질문 – 바꿔 말하기 (10/22 내용, ID 없음) | 71 | 59.2% | 94.4% | **98.6%** | 100% |
+| 별도 LLM이 쓴 자연어 질문 – 직접형 (10/23~11/25 새 내용) | 39 | 92.3% | 100% | **100%** | 100% |
+| 별도 LLM이 쓴 자연어 질문 – 바꿔 말하기 (새 내용, ID 없음) | 41 | 73.2% | 90.2% | **90.2%** | 100% |
+| 템플릿 – 이메일(식별·본문·담당자) | 972 | – | – | 93.2–100% | 99.7–100% |
+| 템플릿 – Case(상태·요청·액션) | 230 | – | – | 93.6–100% | 98.7–100% |
+| 템플릿 – 마스터(품목·고객·연락처·SO·오류) | 178 | 75.8% | 98.9% | **100%** | 100% |
+| 원문의 고유한 모든 행 | 3,787 | 66.0% | 90.8% | 94.7% | 97.6% |
 
 - `ask_knowledge` 기본 top_k=6 이고, 개수·목록 질문은 `find_emails`/`find_cases`(전수 필터)가, 정확한 숫자·문구는 `grep_text`(전체 행 100% 도달)가 맡습니다.
-- 집계 정합성: 수신 133 / 발신 93 / Case 63 → 대시보드의 누적 수치와 일치.
+- 집계 정합성: 수신 184 / 발신 140 / Case 78 / 11/25 KPI recv 14 / 미해결 오류 2 → 대시보드 수치와 일치.
 - `python tests/e2e_check.py`: stdio, HTTP, HTTP+토큰 세 방식에서 도구 15개 전부 실제 클라이언트로 호출 → **175개 검사 모두 통과** (토큰 없음/틀림 → 401 확인 포함).
-- `python -m pytest tests`: 20개 통과 (모든 행이 검색 단위에 포함됨, ERP 계산 규칙이 데이터 기록과 일치함, 주문등록·메일 승인 흐름).
+- `python -m pytest tests`: 24개 통과 (모든 행이 검색 단위에 포함, 메일·Case·SO 참조와 타임라인 순서 정합성, 대시보드=실제 건수, ERP 계산 규칙=데이터 기록, 주문등록·메일 승인 흐름).
 
 ## 6. 데이터 갱신
+11/25 데이터는 `python scripts/build_snapshot_1125.py`로 10/22 원본을 이어서 만든 것입니다(10/23~11/24 업무 진행 + 11/25 받은 메일 14건, 출하·재고·대시보드·알림 재계산).
 새 스냅샷 파일로 바꾸려면 `data/`의 파일을 교체하거나 환경변수 `COSMETIC_KB_FILE`로 경로를 지정한 뒤 서버를 재시작하세요. 형식(섹션 제목+밑줄, `EMAIL E-…`, `CASE …`)이 같으면 그대로 동작합니다. 바꾼 뒤 `python -m eval.evaluate`로 recall을 다시 확인하세요.

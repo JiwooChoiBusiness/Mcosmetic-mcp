@@ -27,9 +27,9 @@ import re
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
-from .kb import KnowledgeBase
+from .kb import KnowledgeBase, read_snapshot_date
 
-TODAY = "2026-10-22"  # snapshot date
+TODAY = read_snapshot_date() or "2026-11-25"  # snapshot date of the loaded data file
 WAREHOUSE = "화성 제1물류센터"
 MAIL_FROM = "sales@mcosmetic.co.kr"
 OPEN_SO_STATES = ("생산 계획", "출하 준비")
