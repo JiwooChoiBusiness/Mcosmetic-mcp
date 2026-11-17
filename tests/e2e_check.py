@@ -21,7 +21,9 @@ from mcp.client.streamable_http import streamable_http_client
 ROOT = Path(__file__).resolve().parent.parent
 PY = sys.executable
 EXPECTED_TOOLS = {"ask_knowledge", "search_knowledge", "get_record", "find_emails", "find_cases",
-                  "lookup_master", "grep_text", "read_lines", "list_topics"}
+                  "lookup_master", "grep_text", "read_lines", "list_topics",
+                  "erp_price_lookup", "erp_inventory_lookup", "erp_shipment_lookup", "erp_sales_order_lookup",
+                  "erp_register_order", "send_email"}
 
 
 def payload(res) -> dict:
@@ -94,6 +96,31 @@ async def exercise(session: ClientSession, label: str) -> list[str]:
 
     r = await call("list_topics", {})
     ok("list_topics", len(r["sections"]) == 16 and r["total_lines"] == 14062)
+
+    # ---- simulated ERP / mail actions
+    ok("write tools not read-only", tools["erp_register_order"].annotations.read_only_hint is False
+       and tools["erp_price_lookup"].annotations.read_only_hint is True)
+    r = await call("erp_price_lookup", {"item": "글로우 크림 50g", "quantity": 500, "customer": "다온코스메틱"})
+    ok("erp_price_lookup 11,410", r["erpResult"]["price"] == 11410 and r["simulated"] is True)
+    r = await call("erp_inventory_lookup", {"item": "MC-BAR-CR050", "quantity": 300})
+    ok("erp_inventory_lookup shortage", r["erpResult"]["shortage"] == 700 and r["erpResult"]["enough"] is False)
+    r = await call("erp_shipment_lookup", {"sales_order": "SO-20261018-00109"})
+    ok("erp_shipment_lookup tracking", r["erpResult"]["tracking"] == "CJ-6120-4458-9921")
+    r = await call("erp_sales_order_lookup", {"sales_order": "SO-20260929-00063"})
+    ok("erp_sales_order_lookup total", r["erpResult"]["total"] == 10366400)
+    r = await call("erp_register_order", {"case_id": "ORD-2026-00126"})
+    ok("register blocked (no address)", r["status"] == "blocked" and r["missing_fields"] == ["shippingAddress"])
+    p = await call("erp_register_order", {"case_id": "ORD-2026-00124"})
+    ok("register preview", p["status"] == "preview" and "SO-20261022-00124" in p["summary_text"])
+    nope = await session.call_tool("erp_register_order", {"case_id": "ORD-2026-00124", "confirm": True})
+    ok("confirm without preview_id -> error", nope.is_error)
+    d = await call("erp_register_order", {"case_id": "ORD-2026-00124", "confirm": True, "preview_id": p["preview_id"]})
+    ok("register done", d["status"] == "done" and d["orderResult"]["so"] == "SO-20261022-00124")
+    mail = {"to": "sarah.kim@onyuglobal.com", "subject": "주문 접수 확인", "body": "주문 접수되었습니다.\nM코스메틱 이수진 드림",
+            "case_id": "ORD-2026-00124"}
+    p = await call("send_email", mail)
+    d = await call("send_email", {**mail, "confirm": True, "preview_id": p["preview_id"]})
+    ok("send_email preview -> sent", p["status"] == "preview" and d["mail"] == "sent" and d["messageId"].startswith("MSG-"))
 
     bad = await session.call_tool("get_record", {"record_id": "E-9999"})
     ok("unknown id -> is_error with message", bad.is_error and "찾지 못했습니다" in bad.content[0].text)
