@@ -30,9 +30,12 @@ AI는 **도구 이름 + 설명 + 파라미터 설명**을 읽고 어떤 도구�
 ERP·메일 실행 도구:
 7. 조회: erp_price_lookup(단가·할인·납기), erp_inventory_lookup(재고·가용 재고), erp_shipment_lookup(출하·송장),
    erp_sales_order_lookup(인보이스 금액). 바로 호출해도 된다.
-8. 실행: erp_register_order(ERP 주문등록), send_email(메일 발송)은 반드시 두 단계로 한다.
-   (1) confirm=false로 호출해 미리보기를 받고, summary_text(반영 예정 데이터)를 사용자에게 그대로 보여준 뒤 승인을 묻는다.
-   (2) 사용자가 명시적으로 승인한 경우에만 같은 인자 + confirm=true + 받은 preview_id로 다시 호출한다.
+8. 실행: erp_register_order(ERP 주문등록), send_email(메일 발송)은 미리보기 → 승인(한 번) → 실행 순서로 한다.
+   (1) confirm=false로 호출해 미리보기를 받고, summary_text(반영 예정 데이터, 미리보기 ID 포함)를 그대로 보여준 뒤 승인을 한 번 묻는다.
+       미리보기는 도구가 만든 summary_text를 쓴다. 도구를 부르기 전에 직접 만든 미리보기로 승인을 받지 않는다.
+   (2) 사용자가 승인하면(승인/진행/실행/네 등) 다시 미리보기나 재확인을 하지 말고 즉시 같은 인자 + confirm=true + preview_id로 호출한다.
+       preview_id가 대화에 남아 있지 않으면 화면의 '미리보기 ID'를 쓰거나, 같은 인자로 confirm=false를 한 번 더 호출해 얻은
+       preview_id로 같은 턴 안에서 바로 confirm=true를 호출한다. 이미 승인받은 내용을 다시 묻지 않는다.
    승인 전에는 '등록했다/보냈다'고 말하지 않는다. status가 blocked면 빠진 정보를 사용자에게 알리고 실행하지 않는다.
 9. 실행 결과는 응답의 message·orderResult·messageId·applied_changes를 근거로 보고한다.
 ```
@@ -275,7 +278,8 @@ ID나 이름으로 레코드 하나의 전체 내용을 구조화해서 돌려�
 [ERP 실행] ERP 주문등록(POST /api/erp/v1/sales-orders). 반드시 두 단계:
     ① confirm=false → 필수값(고객코드·품목코드·수량·납기·배송지) 검사 후 '반영 예정 데이터'(새 SO 번호, 금액, Case 상태 변경,
     재고 영향)와 preview_id를 돌려준다. summary_text를 사용자에게 보여주고 승인을 받을 것. 필수값이 없으면 status=blocked.
-    ② 승인 후 confirm=true + preview_id → 등록 결과(orderResult: so, customer, item, qty, date, price).
+    ② 사용자가 승인하면 다시 묻지 말고 즉시 confirm=true + preview_id → 등록 결과(orderResult: so, customer, item, qty, date, price).
+    preview_id를 모르면 같은 인자로 confirm=false를 다시 호출해 얻은 preview_id로 같은 턴에서 바로 실행한다(승인은 한 번만).
 ```
 
 | 파라미터 | 타입 | 필수 | 기본값 | 설명 (AI가 읽는 글) |
@@ -288,7 +292,7 @@ ID나 이름으로 레코드 하나의 전체 내용을 구조화해서 돌려�
 | `shipping_address` | string 또는 null |  | null | 배송지 (Case에 없을 때 고객에게 받은 값) |
 | `unit_price` | integer 또는 null |  | null | 단가 지정 (생략 시 Case 견적 단가 또는 수량 할인 규칙) |
 | `confirm` | boolean |  | false | false=미리보기(기본), true=실행. true는 사용자가 미리보기를 승인한 뒤에만 |
-| `preview_id` | string 또는 null |  | null | confirm=true일 때 필수: 미리보기에서 받은 preview_id |
+| `preview_id` | string 또는 null |  | null | confirm=true일 때 필수: 미리보기의 preview_id (화면에 보인 '미리보기 ID: PV-…' 값) |
 | `simulate_failure` | boolean |  | false | 장애 대응 확인용: ERP 응답 시간 초과(Timeout) 상황을 재현 |
 
 ### `send_email` — 메일 발송
@@ -300,7 +304,8 @@ ID나 이름으로 레코드 하나의 전체 내용을 구조화해서 돌려�
 ```
 [메일 실행] 고객에게 메일 발송(POST /api/mail/v1/send). 반드시 두 단계:
     ① confirm=false → 수신자·제목·본문 미리보기와 확인 사항(마스터에 없는 주소, Case 고객 불일치, 서명 누락)과 preview_id.
-    ② 사용자 승인 후 confirm=true + preview_id → messageId, sentAt.
+    ② 사용자가 승인하면 다시 묻지 말고 즉시 confirm=true + preview_id → messageId, sentAt.
+    preview_id를 모르면 같은 인자로 confirm=false를 다시 호출해 얻은 preview_id로 같은 턴에서 바로 실행한다(승인은 한 번만).
 ```
 
 | 파라미터 | 타입 | 필수 | 기본값 | 설명 (AI가 읽는 글) |
@@ -311,5 +316,5 @@ ID나 이름으로 레코드 하나의 전체 내용을 구조화해서 돌려�
 | `case_id` | string 또는 null |  | null | 연결할 업무 Case ID (선택) |
 | `cc` | string 또는 null |  | null | 참조 (선택) |
 | `confirm` | boolean |  | false | false=미리보기(기본), true=발송. true는 사용자가 승인한 뒤에만 |
-| `preview_id` | string 또는 null |  | null | confirm=true일 때 필수: 미리보기에서 받은 preview_id |
+| `preview_id` | string 또는 null |  | null | confirm=true일 때 필수: 미리보기의 preview_id (화면에 보인 '미리보기 ID: PV-…' 값) |
 | `simulate_failure` | boolean |  | false | 장애 대응 확인용: SMTP 451 발송 실패 상황을 재현 |

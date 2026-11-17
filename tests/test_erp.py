@@ -102,3 +102,15 @@ def test_send_email_flow(kb):
     assert d["status"] == "done" and d["messageId"].startswith("MSG-") and d["sentAt"].startswith("2026-10-22")
     w = erp.send_email(kb, to="someone@unknown.com", subject="x", body="y", case_id="ORD-2026-00124")
     assert len(w["warnings"]) == 2
+
+
+def test_preview_id_survives_turns(kb):
+    """Platforms that drop tool results between turns: the id is in the visible text, is stable,
+    and is accepted in loose forms; re-previewing yields the same id so the AI can execute in one turn."""
+    p = erp.register_order(kb, case_id="ORD-2026-00124")
+    pid = p["preview_id"]
+    assert f"미리보기 ID: {pid}" in p["summary_text"]
+    assert erp.register_order(kb, case_id="ORD-2026-00124")["preview_id"] == pid
+    for loose in (pid.lower(), pid.replace("PV-", ""), f" '{pid}' "):
+        assert erp.register_order(kb, case_id="ORD-2026-00124", confirm=True, preview=loose)["status"] == "done"
+    assert "한 번만" in p["next"] and "다시 묻지 않음" in p["next"]

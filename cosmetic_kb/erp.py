@@ -79,7 +79,21 @@ def won(n: int | float) -> str:
 
 def preview_id(kind: str, plan: dict[str, Any]) -> str:
     body = json.dumps(plan, ensure_ascii=False, sort_keys=True, default=str)
-    return "PV-" + hmac.new(_SECRET, f"{kind}|{body}".encode(), hashlib.sha256).hexdigest()[:12]
+    return "PV-" + hmac.new(_SECRET, f"{kind}|{body}".encode(), hashlib.sha256).hexdigest()[:8].upper()
+
+
+def norm_preview_id(value: str | None) -> str:
+    """Accept 'PV-1A2B3C4D', 'pv-1a2b3c4d', '1A2B3C4D', with stray spaces/quotes."""
+    v = (value or "").strip().strip("'\"`[]() ").upper().replace(" ", "")
+    return v if not v or v.startswith("PV-") else "PV-" + v
+
+
+def approval_next(pid: str, verb: str) -> str:
+    return (f"사용자에게 summary_text를 미리보기 ID까지 그대로 보여주고 승인을 '한 번만' 물으세요. "
+            f"사용자가 승인하면(승인/진행/실행/네/OK 등) 다시 미리보기하거나 재확인하지 말고 즉시 같은 인자 + confirm=true + "
+            f"preview_id='{pid}'로 호출하세요. 다음 턴에 preview_id가 대화에 없으면 화면에 보여준 미리보기 ID를 쓰거나, "
+            f"같은 인자로 confirm=false를 한 번 더 호출해 받은 preview_id로 같은 턴 안에서 바로 confirm=true를 호출하세요"
+            f"(사용자에게 다시 묻지 않음). 승인 전에는 {verb}고 말하지 마세요.")
 
 
 def resolve_item(kb: KnowledgeBase, item: str) -> dict[str, Any]:
@@ -306,8 +320,8 @@ def _order_changes(plan: dict[str, Any], when: str) -> list[dict[str, Any]]:
     return ch
 
 
-def _order_text(plan: dict[str, Any]) -> str:
-    lines = ["[ERP 주문등록 — 반영 예정 데이터]",
+def _order_text(plan: dict[str, Any], pid: str) -> str:
+    lines = [f"[ERP 주문등록 — 반영 예정 데이터]  미리보기 ID: {pid}",
              f"1) Sales Order 생성: {plan['so']} | {plan['customer']} | {plan['item']} {plan['qty']:,}EA | 단가 {won(plan['price'])} ({plan['price_source']})",
              f"   공급가 {won(plan['amount'])} · 부가세 {won(plan['vat'])} · 합계 {won(plan['total'])} | 출하예정 {plan['shipDate']} | 상태 {plan['soState']}",
              f"   배송지 {plan['shippingAddress']}"]
@@ -325,6 +339,7 @@ def _order_text(plan: dict[str, Any]) -> str:
         lines.append(f"   ※ 고객 희망 납기 {plan['requested']} → 가능일 {plan['shipDate']}로 조정 필요(고객 안내 권장)")
     for err in plan["open_errors"]:
         lines.append(f"   ※ 이전 실패 {err} → 해결 처리")
+    lines.append("→ 승인하면 위 내용 그대로 ERP에 등록됩니다.")
     return "\n".join(lines)
 
 
@@ -344,10 +359,11 @@ def register_order(kb: KnowledgeBase, case_id: str | None = None, customer: str 
     pid = preview_id("order", plan)
     if not confirm:
         return {"status": "preview", "requires_approval": True, "preview_id": pid, "simulated": True,
-                "summary_text": _order_text(plan), "changes": _order_changes(plan, f"{TODAY} (승인 시각)"),
-                "next": f"사용자에게 summary_text를 그대로 보여주고 승인을 받으면 같은 인자에 confirm=true, preview_id='{pid}'로 다시 호출하세요. 승인 전에는 등록됐다고 말하지 마세요."}
-    if preview != pid:
-        raise ErpInputError("preview_id가 없거나 미리보기 내용과 다릅니다. confirm=false로 다시 미리보기를 받아 사용자 승인 후 그 preview_id로 실행하세요.")
+                "summary_text": _order_text(plan, pid), "changes": _order_changes(plan, f"{TODAY} (승인 시각)"),
+                "next": approval_next(pid, "등록됐다")}
+    if norm_preview_id(preview) != pid:
+        raise ErpInputError("preview_id가 없거나 미리보기 내용과 다릅니다. 사용자가 이미 같은 내용을 승인했다면 같은 인자로 "
+                            "confirm=false를 호출해 받은 preview_id로 같은 턴에서 바로 confirm=true를 호출하세요(다시 묻지 않음).")
     when = stamp()
     base = {"orderApi": "POST /api/erp/v1/sales-orders", "erpMs": erp_ms("order", pid), "simulated": True,
             "persisted": False, "requestedDate": when}
@@ -405,15 +421,17 @@ def send_email(kb: KnowledgeBase, to: str, subject: str, body: str, case_id: str
     if case:
         changes.append({"target": case.id, "field": "timeline", "add": f"{TODAY} (발송 시각) | mail (out) | {subject.strip()}"})
     if not confirm:
-        text = "\n".join(["[메일 발송 — 반영 예정 데이터]", f"보내는 사람: {MAIL_FROM}", f"받는 사람: {to}"
+        text = "\n".join([f"[메일 발송 — 반영 예정 데이터]  미리보기 ID: {pid}", f"보내는 사람: {MAIL_FROM}", f"받는 사람: {to}"
                           + (f" ({contact['name']} {contact['contact']['n']})" if contact else ""),
                           f"참조: {cc or '-'}", f"제목: {subject.strip()}", "본문:", body.strip(),
-                          f"연결 Case: {case.id if case else '-'}"] + [f"⚠ {w}" for w in warnings])
+                          f"연결 Case: {case.id if case else '-'}"] + [f"⚠ {w}" for w in warnings]
+                         + ["→ 승인하면 위 내용 그대로 발송됩니다."])
         return {"status": "preview", "requires_approval": True, "preview_id": pid, "simulated": True,
                 "summary_text": text, "warnings": warnings, "changes": changes,
-                "next": f"사용자에게 summary_text를 보여주고 승인을 받으면 같은 인자에 confirm=true, preview_id='{pid}'로 다시 호출하세요. 승인 전에는 보냈다고 말하지 마세요."}
-    if preview != pid:
-        raise ErpInputError("preview_id가 없거나 미리보기 내용과 다릅니다(제목·본문·수신자가 바뀌었으면 다시 미리보기 필요).")
+                "next": approval_next(pid, "보냈다")}
+    if norm_preview_id(preview) != pid:
+        raise ErpInputError("preview_id가 없거나 미리보기 내용과 다릅니다(제목·본문·수신자가 바뀌었으면 다시 미리보기 필요). "
+                            "사용자가 이미 같은 내용을 승인했다면 같은 인자로 confirm=false를 호출해 받은 preview_id로 같은 턴에서 바로 confirm=true를 호출하세요.")
     when = stamp()
     if simulate_failure:
         return {"status": "failed", "mail": "error", "mailApi": "POST /api/mail/v1/send", "simulated": True,
