@@ -47,8 +47,12 @@ GLOSS: dict[str, str] = {
     "excluded": "제외 빠짐", "styling": "스타일 디자인", "javascript": "자바스크립트 구현", "cdn": "CDN 폰트",
     "source": "출처 원본", "html": "HTML 화면 파일",
     "- quote": "견적 견적요청", "- order": "주문 주문등록 발주", "- ship": "출하 출하일정 배송", "- stock": "재고 재고문의",
-    "- invoice": "인보이스 발행 요청", "- etc": "기타", "required": "필수 반드시 필요한 접수 있으면",
+    "- invoice": "인보이스 발행 요청", "- etc": "기타",
+    "incoming email workflow": "메일 처리 순서 처리 절차 처리 단계 처리 흐름 메일을 받으면 어떤 순서로 처리 에이전트 동작",
+    "receive customer email": "고객 메일을 받으면 메일 받기 수신",
+    "1) ": "첫째 1단계", "9) ": "마지막 9단계 발송 보류",
 }
+GLOSS["required"] = "필수 반드시 필요한 요구 접수 있으면"
 
 
 def gloss(text: str) -> str:
