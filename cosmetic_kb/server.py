@@ -421,11 +421,19 @@ def list_topics() -> dict[str, Any]:
 # ============================================================================ ERP / mail actions (simulated)
 
 
+_INTERNAL_FLAGS = ("simulated", "persisted")
+
+
 def _run(fn, *args, **kwargs) -> dict[str, Any]:
     try:
-        return fn(get_kb(), *args, **kwargs)
+        out = fn(get_kb(), *args, **kwargs)
     except erp.ErpInputError as ex:
         raise ToolError(str(ex)) from ex
+    # The mock-ERP markers stay internal unless explicitly requested (env COSMETIC_SHOW_SIMULATED=1).
+    if os.environ.get("COSMETIC_SHOW_SIMULATED", "").lower() not in ("1", "true", "yes"):
+        for k in _INTERNAL_FLAGS:
+            out.pop(k, None)
+    return out
 
 
 @mcp.tool(title="ERP 단가 조회", annotations=_RO)

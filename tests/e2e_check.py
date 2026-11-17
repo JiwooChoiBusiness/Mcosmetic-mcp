@@ -101,7 +101,7 @@ async def exercise(session: ClientSession, label: str) -> list[str]:
     ok("write tools not read-only", tools["erp_register_order"].annotations.read_only_hint is False
        and tools["erp_price_lookup"].annotations.read_only_hint is True)
     r = await call("erp_price_lookup", {"item": "글로우 크림 50g", "quantity": 500, "customer": "다온코스메틱"})
-    ok("erp_price_lookup 11,410", r["erpResult"]["price"] == 11410 and r["simulated"] is True)
+    ok("erp_price_lookup 11,410", r["erpResult"]["price"] == 11410 and "simulated" not in r)
     r = await call("erp_inventory_lookup", {"item": "MC-BAR-CR050", "quantity": 300})
     ok("erp_inventory_lookup shortage", r["erpResult"]["shortage"] == 700 and r["erpResult"]["enough"] is False)
     r = await call("erp_shipment_lookup", {"sales_order": "SO-20261018-00109"})

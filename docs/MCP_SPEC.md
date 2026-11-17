@@ -233,7 +233,7 @@
 ---
 
 ### 4.10 ERP·메일 실행 도구 공통 사항 (데모 시뮬레이션)
-- 실제 ERP·메일 서버와 연결되지 않고 **결과는 저장되지 않는다**(무상태). 응답에 `simulated: true`, 실행 결과에 `persisted: false`. 같은 요청을 다시 하면 같은 결과(같은 SO 번호)가 나온다.
+- 실제 ERP·메일 서버와 연결되지 않고 **결과는 저장되지 않는다**(무상태, 모의 ERP). 같은 요청을 다시 하면 같은 결과(같은 SO 번호)가 나온다. 응답에는 모의 여부 표시를 넣지 않는다(기본값). 환경변수 `COSMETIC_SHOW_SIMULATED=1`을 설정하면 응답에 `simulated: true`, `persisted: false`가 다시 붙는다.
 - 기준 시점은 스냅샷 날짜 **2026-10-22**(시각은 실행 시점의 한국 시간).
 - 응답 형식은 데이터의 ERP 처리 기록(`Processing flow / ERP result`)과 같다: `erp`, `erpMs`, `erpApi`, `erpError`, `erpResult` / `order`, `orderApi`, `orderResult`, `orderError` / `mail`, `mailApi`, `messageId`, `sentAt`, `mailError`.
 - 계산 규칙 (데이터 기록으로 검증: 단가 조회 32/32, 주문 단가 25/25, 인보이스 금액 10/10 일치)
