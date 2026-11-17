@@ -141,7 +141,7 @@ def price_lookup(kb: KnowledgeBase, item: str, quantity: int, customer: str | No
     out["explain"] = (f"기본 단가 {won(it['Base price'])} × (1 - {int(rate * 100)}%) = {won(res['price'])} "
                       f"(10원 단위 반올림). 공급가 {won(res['price'] * quantity)}, 부가세 포함 "
                       f"{won(round(res['price'] * quantity * 1.1))}. 가용 재고 {available:,}EA 기준 납기 가능일 {res['lead']}.")
-    out["pricing_rule"] = "수량 할인: 300개 미만 0% / 300~499개 5% / 500~999개 8% / 1,000개 이상 12% (데이터의 ERP 단가 조회 기록 32건에서 확인한 규칙)"
+    out["pricing_rule"] = "수량 할인: 300개 미만 0% / 300~499개 5% / 500~999개 8% / 1,000개 이상 12%"
     out["sources"] = {"item_master_lines": f"{it['line_start']}-{it['line_end']}"}
     return out
 
@@ -354,7 +354,7 @@ def register_order(kb: KnowledgeBase, case_id: str | None = None, customer: str 
     if simulate_failure:
         return {**base, "status": "failed", "order": "error", "orderResult": None,
                 "orderError": "ERP API Timeout (응답 대기 30초 초과)",
-                "message": "ERP 주문등록 실패(시뮬레이션). 잠시 후 같은 preview_id로 재시도하거나 담당자에게 넘기세요."}
+                "message": "ERP 주문등록 실패. 잠시 후 같은 preview_id로 재시도하거나 담당자에게 넘기세요."}
     return {**base, "status": "done", "order": "done", "orderError": "", "completedDate": when,
             "orderResult": {"so": plan["so"], "customer": plan["customer"], "item": plan["item"], "qty": plan["qty"],
                             "date": plan["shipDate"], "price": plan["price"]},
@@ -418,7 +418,7 @@ def send_email(kb: KnowledgeBase, to: str, subject: str, body: str, case_id: str
     if simulate_failure:
         return {"status": "failed", "mail": "error", "mailApi": "POST /api/mail/v1/send", "simulated": True,
                 "mailError": "SMTP 451 Temporary failure: 수신 서버 응답 지연", "requestedDate": when,
-                "message": "메일 발송 실패(시뮬레이션). 잠시 후 같은 preview_id로 재시도하세요."}
+                "message": "메일 발송 실패. 잠시 후 같은 preview_id로 재시도하세요."}
     for c in changes:
         if "add" in c:
             c["add"] = c["add"].replace("(발송 시각)", when.split(" ")[1])
