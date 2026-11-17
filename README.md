@@ -56,7 +56,7 @@ MCP_Cosmetic/
 ```bash
 cd "C:/Users/ElonChoi(최지우)/Desktop/MCP_Cosmetic"
 python -m venv .venv
-.venv/Scripts/python -m pip install -r requirements.txt
+.venv/Scripts/python -m pip install -r requirements.txt -r requirements-dev.txt
 ```
 
 - stdio (Claude Code): `.venv/Scripts/python run_server.py`
@@ -76,12 +76,14 @@ python -m venv .venv
 | 설명 | M코스메틱 이메일 에이전트 지식 데이터(2026-10-22 스냅샷) 검색·조회 |
 
 외부 AI는 인터넷(클라우드)에서 접속하므로 **내 PC의 localhost 주소로는 연결되지 않습니다.** 다음 중 하나가 필요합니다.
-0. **Hugging Face Spaces (무료, 현재 선택한 방식):** 이 폴더가 그대로 Docker Space 저장소입니다(README 맨 위 설정 블록 + `Dockerfile`, 포트 7860).
-   1. https://huggingface.co 가입 → New Space → SDK: **Docker** / Template: **Blank** / Hardware: **CPU basic (free)** / **Public**
-   2. `git remote add space https://huggingface.co/spaces/<아이디>/<스페이스이름>` 후 `git push space main --force`
-      (비밀번호 칸에는 Hugging Face의 Access Token(write 권한)을 입력)
-   3. 빌드가 끝나면 URL: `https://<아이디>-<스페이스이름>.hf.space/mcp` (상태 확인: `/health`)
-   - 48시간 동안 요청이 없으면 잠들고, 다음 요청 때 1분 안팎으로 다시 켜집니다.
+0. **GitHub + Vercel (무료, 현재 선택한 방식):** Vercel 무료(Hobby) 요금제가 `app.py`의 `app`을 서버리스 함수로 실행합니다.
+   1. GitHub에 **Public** 저장소를 만들고 이 폴더를 push
+   2. https://vercel.com 에 GitHub 계정으로 가입 → **Add New → Project** → 그 저장소 **Import** → **Deploy**
+      (설정은 기본값 그대로. `requirements.txt`, `.python-version`, `vercel.json`이 이미 들어 있음)
+   3. URL: `https://<프로젝트이름>.vercel.app/mcp` (상태 확인: `/health`)
+   - 이후 GitHub에 push할 때마다 자동으로 다시 배포됩니다.
+   - 서버리스라 잠들지 않고, 오래 안 쓴 뒤 첫 요청만 1~3초 더 걸립니다.
+   - (Hugging Face Spaces는 2026년 기준 Docker 방식이 유료로 바뀌어 제외)
 1. **클라우드 배포 (유료, 주소 고정):** `Dockerfile`로 Azure Container Apps / App Service 등에 올리고 `COSMETIC_MCP_TOKEN` 설정 → `https://<앱주소>/mcp`
 2. **터널 (빠른 테스트):** PC에서 서버를 켜고 `cloudflared tunnel --url http://localhost:8765` 같은 터널로 임시 https 주소 발급 → `https://xxxx.trycloudflare.com/mcp` (PC가 켜져 있어야 하고, 주소가 실행할 때마다 바뀜)
 3. **사내망:** 외부 AI가 사내망에서 PC에 직접 닿는다면 `http://<PC IP>:8765/mcp` (Windows 방화벽에서 8765 포트 허용 필요)

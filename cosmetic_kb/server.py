@@ -483,19 +483,35 @@ def _record(record_id: str, compact: bool) -> dict[str, Any]:
 
 
 # ============================================================================ entry point
-def _http_app(token: str | None, path: str):
+def build_asgi_app(token: str | None = None, path: str = "/mcp"):
+    """ASGI app for Streamable HTTP (stateless, JSON responses).
+
+    It does not rely on ASGI lifespan events: every MCP request gets its own short-lived session
+    manager. That makes the same app work under uvicorn and on serverless platforms (Vercel etc.)
+    that may never send lifespan startup."""
     from starlette.responses import JSONResponse
 
+    from mcp.server.streamable_http_manager import StreamableHTTPSessionManager
     from mcp.server.transport_security import TransportSecuritySettings
 
-    app = mcp.streamable_http_app(
-        streamable_http_path=path, stateless_http=True, json_response=True,
-        # Public deployments sit behind proxies/tunnels with arbitrary Host headers.
-        transport_security=TransportSecuritySettings(enable_dns_rebinding_protection=False),
-        host="0.0.0.0",
-    )
+    # Public deployments sit behind proxies with arbitrary Host headers.
+    security = TransportSecuritySettings(enable_dns_rebinding_protection=False)
+
+    async def mcp_endpoint(scope, receive, send):
+        manager = StreamableHTTPSessionManager(app=mcp._lowlevel_server, json_response=True, stateless=True,
+                                               security_settings=security)
+        async with manager.run():
+            await manager.handle_request(scope, receive, send)
 
     async def guarded(scope, receive, send):
+        if scope["type"] == "lifespan":  # nothing to start or stop
+            while True:
+                msg = await receive()
+                if msg["type"] == "lifespan.startup":
+                    await send({"type": "lifespan.startup.complete"})
+                elif msg["type"] == "lifespan.shutdown":
+                    await send({"type": "lifespan.shutdown.complete"})
+                    return
         if scope["type"] == "http":
             req_path = scope.get("path", "")
             if req_path in ("/", "/health"):
@@ -523,7 +539,12 @@ def _http_app(token: str | None, path: str):
                                         headers={"WWW-Authenticate": "Bearer"})
                     await resp(scope, receive, send)
                     return
-        await app(scope, receive, send)
+            if req_path == path:
+                await mcp_endpoint(scope, receive, send)
+                return
+            resp = JSONResponse({"error": "not found", "mcp_path": path}, status_code=404)
+            await resp(scope, receive, send)
+            return
 
     return guarded
 
@@ -542,7 +563,7 @@ def main() -> None:
     import uvicorn
 
     token = os.environ.get("COSMETIC_MCP_TOKEN") or None
-    uvicorn.run(_http_app(token, args.path), host=args.host, port=args.port, log_level="info")
+    uvicorn.run(build_asgi_app(token, args.path), host=args.host, port=args.port, log_level="info")
 
 
 if __name__ == "__main__":
