@@ -32,6 +32,7 @@ MCP_Cosmetic/
   Dockerfile              클라우드 배포용
   docs/MCP_SPEC.md        MCP 명세서 (도구·파라미터·반환값·접속 사양)
   docs/PROMPTS.md         예시 프롬프트 40개 + 심화 23개 (기대 답변 포함)
+  docs/TOOLS_FOR_AI.md    AI가 실제로 받는 서버 지침·도구 정의 (scripts/dump_tool_defs.py로 생성)
   .mcp.json               Claude Code 연결 설정 (git 제외)
 ```
 
