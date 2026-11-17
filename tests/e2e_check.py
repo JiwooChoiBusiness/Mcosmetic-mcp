@@ -95,13 +95,13 @@ async def exercise(session: ClientSession, label: str) -> list[str]:
     ok("read_lines", "Knowledge Base" in r["text"] and r["text"].startswith("1: "))
 
     r = await call("list_topics", {})
-    ok("list_topics", len(r["sections"]) == 16 and r["total_lines"] == 19638 and r["snapshot_date"] == "2026-11-25")
+    ok("list_topics", len(r["sections"]) == 16 and r["total_lines"] == 19639 and r["snapshot_date"] == "2026-11-25")
 
     # ---- simulated ERP / mail actions
     ok("write tools not read-only", tools["erp_register_order"].annotations.read_only_hint is False
        and tools["erp_price_lookup"].annotations.read_only_hint is True)
     r = await call("erp_price_lookup", {"item": "글로우 크림 50g", "quantity": 500, "customer": "다온코스메틱"})
-    ok("erp_price_lookup 11,410", r["erpResult"]["price"] == 11410 and "simulated" not in r)
+    ok("erp_price_lookup 35,880 (DB price 39,000 - 8%)", r["erpResult"]["price"] == 35880 and "simulated" not in r)
     r = await call("erp_inventory_lookup", {"item": "MC-CAL-CR050", "quantity": 500})
     ok("erp_inventory_lookup allocated", r["erpResult"]["allocated"] == 1000 and r["erpResult"]["enough"] is True)
     r = await call("erp_shipment_lookup", {"sales_order": "SO-20261018-00109"})

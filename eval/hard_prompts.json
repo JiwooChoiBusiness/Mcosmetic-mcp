@@ -68,14 +68,14 @@
  {
   "cat": "B. 계산·검산",
   "prompt": "다온코스메틱에 글로우 크림 500개를 11,410원에 견적 줬는데, 품목 기본 단가 대비 몇 % 할인된 거야?",
-  "expected": "기본 단가 12,400원 → 약 8% 할인 (12,400 × 0.92 = 11,408 → 11,410원)",
-  "steps": "ask_knowledge → get_record(MC-GLW-CR050) → 계산",
+  "expected": "견적 당시 ERP 단가 조회 기록의 기본 단가 12,400원 기준 약 8% 할인 (12,400 × 0.92 = 11,408 → 11,410원). ※ 지금 품목 마스터의 기본 단가는 DB 기준가격 39,000원이지만, 과거 견적은 당시 가격 기준이라 소급하지 않음",
+  "steps": "ask_knowledge → 견적 메일의 ERP 결과(base) 확인 → 계산 (현재 마스터 가격과 구분)",
   "check": {
-   "call": "get_record",
+   "call": "grep_text",
    "args": {
-    "record_id": "MC-GLW-CR050"
+    "pattern": "\"base\": 12400"
    },
-   "contains": "12400"
+   "min_total": 1
   }
  },
  {

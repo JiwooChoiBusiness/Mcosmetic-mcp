@@ -76,6 +76,11 @@ for e in kb.emails.values():
 ASSIGNEE = {k: (_ass[k].most_common(1)[0][0] if _ass[k] else "이수진") for k in CU}
 
 IT = {k: dict(v) for k, v in kb.items.items()}
+# Prices used for the 10/23-11/24 transactions: the base prices in effect when the deals were made.
+# The item master itself shows the DB standard prices (see the note in section 15); history is not repriced.
+TX_BASE = {"MC-CAL-SR050": 10000, "MC-CAL-CR050": 12000, "MC-GLW-SR050": 11000, "MC-BAR-SR050": 11500,
+           "MC-BAL-CR050": 12500, "MC-CIC-SR050": 10500, "MC-CAL-MK100": 8000, "MC-GLW-TN150": 7000,
+           "MC-HYD-SR050": 10800, "MC-BAR-CR050": 12800, "MC-HYD-CR050": 12200, "MC-GLW-CR050": 12400}
 LEAD_DAYS = {k: (D(v["Lead date"]) - OLD).days - 7 for k, v in IT.items()}
 BACK_DAYS = {k: (D(v["Back lead date"]) - OLD).days - 7 for k, v in IT.items()}
 # one replenishment per item on its 10/22 lead date
@@ -350,7 +355,7 @@ def in_head(code: str):
 def quote_flow(code, item, qty, x: datetime):
     st = stock_at(item, x.date())
     lead, ok = lead_for(item, qty, x.date())
-    base = IT[item]["Base price"]
+    base = TX_BASE[item]
     res = {"itemName": IT[item]["name"], "short": IT[item]["Short name"], "itemCode": item, "base": base,
            "price": unit_price(base, qty), "rate": discount_rate(qty), "qty": qty, "stock": st, "inStock": ok, "lead": str(lead)}
     return {"erpMs": ms(code, item, qty, x), "erpStale": False, "erp": "done", "erpResult": res, "erpError": "",
@@ -1187,6 +1192,7 @@ out += ["15. IMPORTANT SOURCE-SPECIFIC NOTES", "--------------------------------
         "- The embedded data is the source of truth for the knowledge extracted here.",
         f"- KPI counts for {NEW} and cumulative email/case counts describe different aggregation periods and are intentionally kept separate.",
         "- Item stock is the on-hand quantity on the snapshot date (after shipments and inbound receipts); lead dates are as of the snapshot date.",
+        "- Base price values in the item master are the company DB standard prices (KRW). Prices recorded in quotes, ERP results, orders and invoices are the transaction prices at that time and are not changed retroactively.",
         "- Demo scenario IDs E-2002 through E-2006 appear in scenario definitions but are not actual mail records in this snapshot.",
         "- UI styling, CSS, icons, JavaScript implementation details, and CDN/font configuration were intentionally excluded because they are not business knowledge for the LLM."]
 

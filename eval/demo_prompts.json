@@ -45,7 +45,7 @@
  {
   "cat": "2. 품목·고객 마스터",
   "prompt": "시카 세럼 50g의 기본 단가, 재고, 납기 가능일 알려줘.",
-  "expected": "MC-CIC-SR050 / 기본 단가 10,500원 / 재고 3,100 / Lead date 2026-12-19 (Back lead date 2027-01-01)",
+  "expected": "MC-CIC-SR050 / 기본 단가 33,000원(DB 기준가격) / 재고 3,100 / Lead date 2026-12-19 (Back lead date 2027-01-01)",
   "tool": "ask_knowledge 또는 get_record",
   "check": {
    "ask": "Stock: 3100"
@@ -66,15 +66,15 @@
  },
  {
   "cat": "2. 품목·고객 마스터",
-  "prompt": "기본 단가가 12,000원 이상인 품목을 전부 나열해줘.",
-  "expected": "카밍 크림 12,000 / 밸런스 크림 12,500 / 베리어 크림 12,800 / 하이드라 크림 12,200 / 글로우 크림 12,400",
+  "prompt": "기본 단가가 36,000원 이상인 품목을 전부 나열해줘.",
+  "expected": "카밍 세럼 36,000 / 하이드라 크림 36,000 / 베리어 크림 38,000 / 글로우 크림 39,000 / 카밍 크림 40,000 / 밸런스 크림 41,000 (DB 기준가격)",
   "tool": "lookup_master(items)",
   "check": {
    "call": "lookup_master",
    "args": {
     "table": "items"
    },
-   "contains": "\"Base price\": 12800"
+   "contains": "\"Base price\": 41000"
   }
  },
  {

@@ -32,10 +32,21 @@ def test_price_rule_matches_all_recorded_lookups(kb):
 
 
 def test_order_prices_match_recorded_orders(kb):
+    """Recorded orders follow the discount rule on the base price of their time (taken from the recorded
+    ERP price look-ups), not the current master price, which is the DB standard price (no retroactive change)."""
+    hist_base = {}
+    for _, p in _flows(kb):
+        r = p.get("erpResult")
+        if isinstance(r, dict) and "base" in r:
+            hist_base.setdefault(r["itemCode"], set()).add(r["base"])
+    assert all(len(v) == 1 for v in hist_base.values())
     rows = [p["orderResult"] for _, p in _flows(kb) if isinstance(p.get("orderResult"), dict) and p["orderResult"].get("price")]
     assert len(rows) >= 25
     for o in rows:
-        assert erp.unit_price(erp.resolve_item(kb, o["item"])["Base price"], o["qty"]) == o["price"]
+        item = erp.resolve_item(kb, o["item"])["itemCode"]
+        if item in hist_base:
+            assert erp.unit_price(next(iter(hist_base[item])), o["qty"]) == o["price"]
+        assert kb.items[item]["Base price"] > o["price"]  # master now shows the (higher) DB price
 
 
 def test_invoice_amounts_match_recorded(kb):
@@ -53,7 +64,7 @@ def test_today_is_snapshot_date(kb):
 
 def test_price_lookup_glow_cream_500(kb):
     r = erp.price_lookup(kb, "글로우 크림 50g", 500, "다온코스메틱")["erpResult"]
-    assert (r["base"], r["rate"], r["price"]) == (12400, 0.08, 11410)
+    assert (r["base"], r["rate"], r["price"]) == (39000, 0.08, 35880)  # DB standard price 39,000
 
 
 def test_inventory_allocation_matches_open_sales_orders(kb):

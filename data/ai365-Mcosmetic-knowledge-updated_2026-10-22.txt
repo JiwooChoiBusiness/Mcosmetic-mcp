@@ -99,73 +99,73 @@ Inbox review rule:
 ----------------------
 - MC-CAL-SR050: M코스메틱 카밍 세럼 50g
   Short name: 카밍 세럼 50g
-  Base price: 10000
+  Base price: 36000
   Stock: 1200
   Lead date: 2026-11-13
   Back lead date: 2026-12-01
 - MC-CAL-CR050: M코스메틱 카밍 크림 50g
   Short name: 카밍 크림 50g
-  Base price: 12000
+  Base price: 40000
   Stock: 2400
   Lead date: 2026-11-09
   Back lead date: 2026-11-29
 - MC-GLW-SR050: M코스메틱 글로우 세럼 50g
   Short name: 글로우 세럼 50g
-  Base price: 11000
+  Base price: 35000
   Stock: 1800
   Lead date: 2026-11-09
   Back lead date: 2026-11-28
 - MC-BAR-SR050: M코스메틱 베리어 세럼 50g
   Short name: 베리어 세럼 50g
-  Base price: 11500
+  Base price: 34000
   Stock: 900
   Lead date: 2026-11-11
   Back lead date: 2026-11-30
 - MC-BAL-CR050: M코스메틱 밸런스 크림 50g
   Short name: 밸런스 크림 50g
-  Base price: 12500
+  Base price: 41000
   Stock: 1500
   Lead date: 2026-11-10
   Back lead date: 2026-11-29
 - MC-CIC-SR050: M코스메틱 시카 세럼 50g
   Short name: 시카 세럼 50g
-  Base price: 10500
+  Base price: 33000
   Stock: 400
   Lead date: 2026-11-15
   Back lead date: 2026-11-28
 - MC-CAL-MK100: M코스메틱 카밍 워시오프 마스크 100g
   Short name: 카밍 워시오프 마스크 100g
-  Base price: 8000
+  Base price: 32000
   Stock: 3000
   Lead date: 2026-11-07
   Back lead date: 2026-11-25
 - MC-GLW-TN150: M코스메틱 글로우 토너 150g
   Short name: 글로우 토너 150g
-  Base price: 7000
+  Base price: 27000
   Stock: 5000
   Lead date: 2026-11-06
   Back lead date: 2026-11-23
 - MC-HYD-SR050: M코스메틱 하이드라 세럼 50g
   Short name: 하이드라 세럼 50g
-  Base price: 10800
+  Base price: 32000
   Stock: 2600
   Lead date: 2026-11-09
   Back lead date: 2026-11-27
 - MC-BAR-CR050: M코스메틱 베리어 크림 50g
   Short name: 베리어 크림 50g
-  Base price: 12800
+  Base price: 38000
   Stock: 1100
   Lead date: 2026-11-11
   Back lead date: 2026-11-30
 - MC-HYD-CR050: M코스메틱 하이드라 크림 50g
   Short name: 하이드라 크림 50g
-  Base price: 12200
+  Base price: 36000
   Stock: 1700
   Lead date: 2026-11-10
   Back lead date: 2026-11-29
 - MC-GLW-CR050: M코스메틱 글로우 크림 50g
   Short name: 글로우 크림 50g
-  Base price: 12400
+  Base price: 39000
   Stock: 2000
   Lead date: 2026-11-10
   Back lead date: 2026-11-29
@@ -14058,5 +14058,6 @@ Case action history:
 - Processing actions in the standalone HTML are disabled; actions do not modify the snapshot.
 - The embedded data is the source of truth for the knowledge extracted here.
 - KPI counts for 2026-10-22 and cumulative email/case counts describe different aggregation periods and are intentionally kept separate.
+- Base price values in the item master are the company DB standard prices (KRW). Prices recorded in quotes, ERP results, orders and invoices are the transaction prices at that time and are not changed retroactively.
 - Demo scenario IDs E-2002 through E-2006 appear in scenario definitions but are not actual mail records in this snapshot.
 - UI styling, CSS, icons, JavaScript implementation details, and CDN/font configuration were intentionally excluded because they are not business knowledge for the LLM.
