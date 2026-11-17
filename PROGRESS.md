@@ -34,8 +34,11 @@
    - 이 폴더를 별도 git 저장소로 만들고 커밋 완료 (주식 저장소와 무관).
    - 공개 데이터라 접속 토큰은 걸지 않음 → 외부 AI 화면의 인증은 **None**.
 
+8. **공개 배포 — 완료**
+   - GitHub: https://github.com/JiwooChoiBusiness/Mcosmetic-mcp (main)
+   - Vercel 공개 주소: **https://mcosmetic.vercel.app/mcp**
+   - 공개 주소로 도구 9개 실제 호출 → 검사 39개 모두 통과, 응답 0.3~0.5초.
+   - 참고: Vercel이 배포마다 만드는 긴 주소는 로그인 보호가 걸려 외부에서 못 씀 → 기본 주소만 사용.
+
 ## 남은 일
-- 사용자: GitHub에 빈 Public 저장소 만들기 → 저장소 이름 알려주기.
-- 제가: 그 저장소로 코드 올리기(push).
-- 사용자: Vercel에 GitHub로 가입 → 저장소 Import → Deploy (버튼 3번).
-- 제가: 공개 URL로 도구 9개 다시 검증 → 외부 AI 화면에 넣을 값 안내.
+- 사용자: 외부 AI 화면에 서버 URL `https://mcosmetic.vercel.app/mcp`, 인증 None 입력 → Test connection → Save agent.

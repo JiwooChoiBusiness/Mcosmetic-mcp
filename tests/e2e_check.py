@@ -153,8 +153,25 @@ async def run_http(token: str | None) -> list[str]:
         proc.wait(timeout=10)
 
 
+async def run_remote(url: str) -> list[str]:
+    """Check an already deployed server, e.g. https://mcosmetic.vercel.app/mcp"""
+    base = url.rstrip("/").removesuffix("/mcp")
+    log = [f"[remote] PASS health {httpx2.get(base + '/health', timeout=60).json()}"]
+    async with httpx2.AsyncClient(timeout=60) as hc:
+        async with streamable_http_client(base + "/mcp", http_client=hc) as streams:
+            async with ClientSession(streams[0], streams[1]) as s:
+                await s.initialize()
+                log += await exercise(s, "remote")
+    return log
+
+
 async def main() -> None:
     results = []
+    if len(sys.argv) > 1:  # python tests/e2e_check.py https://<host>/mcp
+        results += await run_remote(sys.argv[1])
+        print("\n".join(results))
+        print(f"\nTOTAL {len(results)} checks, {sum('FAIL' in x for x in results)} failed")
+        return
     results += await run_stdio()
     results += await run_http(None)
     results += await run_http("test-token-123")

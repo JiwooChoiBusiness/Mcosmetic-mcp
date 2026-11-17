@@ -71,8 +71,12 @@ python -m venv .venv
 | 항목 | 값 |
 |---|---|
 | 에이전트명 | 예: M코스메틱 지식 |
-| 서버 URL | `https://<공개 주소>/mcp` |
-| 인증 | 토큰을 설정했다면 Bearer(또는 API Key) = 그 토큰, 아니면 None |
+| 서버 URL | **`https://mcosmetic.vercel.app/mcp`** (현재 배포 주소) |
+| 인증 | None (공개 데이터. 토큰을 설정했다면 Bearer = 그 토큰) |
+
+> 주의: Vercel이 배포마다 만드는 긴 주소(`mcosmetic-xxxx-choi-902a.vercel.app`)는 Vercel 로그인 보호가 걸려 있어
+> 외부 AI가 접속할 수 없습니다. 항상 프로젝트 기본 주소 `mcosmetic.vercel.app`을 쓰세요.
+> 배포 확인: `python tests/e2e_check.py https://mcosmetic.vercel.app/mcp`
 | 설명 | M코스메틱 이메일 에이전트 지식 데이터(2026-10-22 스냅샷) 검색·조회 |
 
 외부 AI는 인터넷(클라우드)에서 접속하므로 **내 PC의 localhost 주소로는 연결되지 않습니다.** 다음 중 하나가 필요합니다.
