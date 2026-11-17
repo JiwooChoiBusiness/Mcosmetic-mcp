@@ -40,5 +40,12 @@
    - 공개 주소로 도구 9개 실제 호출 → 검사 39개 모두 통과, 응답 0.3~0.5초.
    - 참고: Vercel이 배포마다 만드는 긴 주소는 로그인 보호가 걸려 외부에서 못 씀 → 기본 주소만 사용.
 
+9. **"Failed to fetch" 해결 — 완료**
+   - 원인 1: 외부 AI의 연결 테스트는 웹 브라우저가 직접 호출하는데, 서버가 브라우저 허용 신호(CORS)를 안 보내서 차단됨 → 서버에 CORS 추가.
+   - 원인 2: Vercel이 처음 배포 때 만든 비공개 사본 저장소(`mcosmetic`)에 연결돼 있어 수정본이 반영 안 됨
+     → Vercel 연결을 `Mcosmetic-mcp`로 변경. 이제 GitHub에 올리면 20초 안에 자동 배포.
+   - 확인: 공개 주소 검사 39개 통과 + 실제 브라우저에서 다른 사이트(example.com)로부터 호출 성공.
+
 ## 남은 일
-- 사용자: 외부 AI 화면에 서버 URL `https://mcosmetic.vercel.app/mcp`, 인증 None 입력 → Test connection → Save agent.
+- 사용자: 외부 AI 화면에서 Test connection 다시 → 도구 9개 확인 → Save agent.
+- (선택) GitHub의 비공개 사본 저장소 `mcosmetic`은 더 안 쓰므로 지워도 됨.
