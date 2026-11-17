@@ -546,7 +546,38 @@ def build_asgi_app(token: str | None = None, path: str = "/mcp"):
             await resp(scope, receive, send)
             return
 
-    return guarded
+    # CORS: browser-based agent builders call the server with fetch() straight from the page,
+    # so preflight (OPTIONS) must succeed and every response must carry Access-Control-* headers.
+    cors_headers = [
+        (b"access-control-allow-origin", b"*"),
+        (b"access-control-allow-methods", b"GET, POST, DELETE, OPTIONS"),
+        (b"access-control-expose-headers", b"Mcp-Session-Id, Mcp-Protocol-Version, WWW-Authenticate"),
+        (b"access-control-max-age", b"86400"),
+    ]
+    default_allow_headers = (b"content-type, accept, authorization, x-api-key, mcp-protocol-version, "
+                             b"mcp-session-id, last-event-id")
+
+    async def with_cors(scope, receive, send):
+        if scope["type"] != "http":
+            await guarded(scope, receive, send)
+            return
+        if scope.get("method") == "OPTIONS":
+            req = dict(scope.get("headers", [])).get(b"access-control-request-headers")
+            allow = default_allow_headers + (b", " + req if req else b"")
+            await send({"type": "http.response.start", "status": 204,
+                        "headers": cors_headers + [(b"access-control-allow-headers", allow)]})
+            await send({"type": "http.response.body", "body": b""})
+            return
+
+        async def send_with_cors(message):
+            if message["type"] == "http.response.start":
+                hdrs = [h for h in message.get("headers", []) if not bytes(h[0]).lower().startswith(b"access-control-")]
+                message = dict(message, headers=hdrs + cors_headers)
+            await send(message)
+
+        await guarded(scope, receive, send_with_cors)
+
+    return with_cors
 
 
 def main() -> None:
