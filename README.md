@@ -22,7 +22,8 @@ MCP_Cosmetic/
   data/ai365-Mcosmetic-knowledge-updated_2026-10-22.txt   원본 데이터 (복사본)
   cosmetic_kb/kb.py       파서 + 한국어 BM25 검색 + 구조화 레코드
   cosmetic_kb/gloss.py    영어 본문용 한국어 용어집(색인 시에만 사용)
-  cosmetic_kb/server.py   MCP 서버 (도구 9개, stdio / HTTP)
+  cosmetic_kb/server.py   MCP 서버 (도구 15개, stdio / HTTP)
+  cosmetic_kb/erp.py      ERP·메일 실행 시뮬레이션 (미리보기 → 승인 → 실행)
   run_server.py           어느 폴더에서나 실행 가능한 런처
   eval/evaluate.py        자동 질문 생성 + recall 측정
   eval/llm_questions.jsonl  LLM이 따로 쓴 자연어 질문 220개
@@ -50,8 +51,16 @@ MCP_Cosmetic/
 | `grep_text` | 원문 전체에서 정확한 문구 찾기 (행 번호) | pattern, regex, max_hits |
 | `read_lines` | 원문 행 범위 그대로 읽기 | start_line, end_line |
 | `list_topics` | 목차·ID 형식·고객/품목/담당자 목록 | – |
+| `erp_price_lookup` | [ERP 데모] 단가 조회: 기본 단가, 수량 할인, 적용 단가, 납기 | item, quantity, customer |
+| `erp_inventory_lookup` | [ERP 데모] 재고 조회: 재고, 출하 예정 물량, 가용 재고 | item, quantity |
+| `erp_shipment_lookup` | [ERP 데모] 출하내역 조회: 상태, 출하일, 송장 | sales_order, customer |
+| `erp_sales_order_lookup` | [ERP 데모] Sales Order 조회: 인보이스 공급가·부가세·합계 | sales_order |
+| `erp_register_order` | [ERP 데모] 주문등록: **미리보기(반영 예정 데이터) → 승인 → 실행** | case_id (또는 customer/item/quantity…), confirm, preview_id |
+| `send_email` | [메일 데모] 메일 발송: **미리보기 → 승인 → 발송** | to, subject, body, case_id, confirm, preview_id |
 
 서버 지침(instructions)과 각 도구 설명에 "반드시 근거를 인용하고, 없으면 '데이터셋에 없음'이라고 답하라"가 들어 있습니다.
+
+**ERP·메일 실행은 데모 시뮬레이션입니다.** 실제 ERP·메일 서버에 연결되지 않고 결과도 저장되지 않습니다(응답에 `simulated: true`). 응답 형식과 계산 규칙은 데이터에 기록된 ERP 결과와 같아서, 기록된 단가 조회 32건·주문 단가 25건·인보이스 금액 10건을 그대로 재현합니다. 주문등록·메일 발송은 먼저 `confirm=false`로 바뀔 데이터를 보여주고, 사용자가 승인하면 그때 받은 `preview_id`로만 실행됩니다(내용이 바뀌면 거부).
 
 ## 3. 실행
 
@@ -114,8 +123,8 @@ python -m venv .venv
 
 - `ask_knowledge` 기본 top_k=6 이고, 개수·목록 질문은 `find_emails`/`find_cases`(전수 필터)가, 정확한 숫자·문구는 `grep_text`(전체 행 100% 도달)가 맡습니다.
 - 집계 정합성: 수신 133 / 발신 93 / Case 63 → 대시보드의 누적 수치와 일치.
-- `python tests/e2e_check.py`: stdio, HTTP, HTTP+토큰 세 방식에서 도구 9개 전부 실제 클라이언트로 호출 → **118개 검사 모두 통과** (토큰 없음/틀림 → 401 확인 포함).
-- `python -m pytest tests`: 9개 통과 (모든 비어 있지 않은 행이 검색 단위에 포함됨을 검사).
+- `python tests/e2e_check.py`: stdio, HTTP, HTTP+토큰 세 방식에서 도구 15개 전부 실제 클라이언트로 호출 → **175개 검사 모두 통과** (토큰 없음/틀림 → 401 확인 포함).
+- `python -m pytest tests`: 20개 통과 (모든 행이 검색 단위에 포함됨, ERP 계산 규칙이 데이터 기록과 일치함, 주문등록·메일 승인 흐름).
 
 ## 6. 데이터 갱신
 새 스냅샷 파일로 바꾸려면 `data/`의 파일을 교체하거나 환경변수 `COSMETIC_KB_FILE`로 경로를 지정한 뒤 서버를 재시작하세요. 형식(섹션 제목+밑줄, `EMAIL E-…`, `CASE …`)이 같으면 그대로 동작합니다. 바꾼 뒤 `python -m eval.evaluate`로 recall을 다시 확인하세요.
