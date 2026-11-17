@@ -2,6 +2,7 @@
 
   python eval/check_demo_prompts.py                                  # in-process
   python eval/check_demo_prompts.py https://mcosmetic.vercel.app/mcp # over the public URL
+  add --hard to check eval/hard_prompts.json instead
 """
 import json
 import sys
@@ -10,8 +11,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-prompts = json.loads((ROOT / "eval" / "demo_prompts.json").read_text(encoding="utf-8"))
-URL = sys.argv[1] if len(sys.argv) > 1 else None
+args = [a for a in sys.argv[1:] if a != "--hard"]
+fname = "hard_prompts.json" if "--hard" in sys.argv else "demo_prompts.json"
+prompts = json.loads((ROOT / "eval" / fname).read_text(encoding="utf-8"))
+URL = args[0] if args else None
 
 if URL:
     import httpx2

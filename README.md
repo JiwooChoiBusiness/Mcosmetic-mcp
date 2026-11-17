@@ -30,7 +30,7 @@ MCP_Cosmetic/
   tests/e2e_check.py      실제 MCP 클라이언트로 stdio/HTTP 전체 도구 검증
   Dockerfile              클라우드 배포용
   docs/MCP_SPEC.md        MCP 명세서 (도구·파라미터·반환값·접속 사양)
-  docs/PROMPTS.md         예시 프롬프트 40개 + 기대 답변
+  docs/PROMPTS.md         예시 프롬프트 40개 + 심화 23개 (기대 답변 포함)
   .mcp.json               Claude Code 연결 설정 (git 제외)
 ```
 
