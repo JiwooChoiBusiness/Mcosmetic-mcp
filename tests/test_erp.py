@@ -128,3 +128,24 @@ def test_preview_id_survives_turns(kb):
     for loose in (pid.lower(), pid.replace("PV-", ""), f" '{pid}' "):
         assert erp.register_order(kb, case_id="ORD-2026-00146", confirm=True, preview=loose)["status"] == "done"
     assert "한 번만" in p["next"] and "다시 묻지 않음" in p["next"]
+
+
+def test_erp_order_audit_november(kb):
+    from cosmetic_kb.audit import erp_order_audit
+    r = erp_order_audit(kb, "2026-11-01", "2026-11-30")
+    s = r["summary"]
+    assert (s["order_mails_checked"], s["registered_ok"], s["problems"]) == (11, 7, 4)
+    cats = {p["email_id"]: p["category"] for p in r["problems"]}
+    assert cats == {"E-1105": "ERP 미등록 — 필수 정보 누락·확인 필요", "E-1106": "ERP 반영 불일치 — 수량 변경 미반영",
+                    "E-1111": "ERP 미등록 — ERP 전송 실패", "E-1113": "ERP 미등록 — 전송 대기"}
+    assert s["unregistered_expected_total_krw"] == 3606900 + 6375600 + 3135000
+    assert any("ERR-0009" in x.get("note", "") for x in r["registered_ok"])
+    assert erp_order_audit(kb, "2026-10-01", "2026-10-31")["summary"]["problems"] == 0
+
+
+def test_ask_knowledge_attaches_audit_for_reconciliation_questions():
+    from cosmetic_kb import server as s
+    r = s.ask_knowledge("ERP 에이전트에서 11월 주문등록 상태이지만 실제 ERP에 등록되지 않은 데이터를 찾아줘.")
+    assert r["analysis"]["period"] == {"from": "2026-11-01", "to": "2026-11-30"} and r["analysis"]["summary"]["problems"] == 4
+    assert "answer_guide" in r and len(r["evidence"]) <= 3
+    assert "analysis" not in s.ask_knowledge("카밍 세럼 견적 납기는?")

@@ -96,7 +96,7 @@
 
 ---
 
-## 4. 도구 명세 (15개: 조회 9 + ERP·메일 실행 6)
+## 4. 도구 명세 (16개: 조회 9 + ERP·메일 실행 6 + 점검 1)
 
 모든 도구는 JSON 객체를 반환한다(`structuredContent` + 같은 내용의 텍스트). 출처 표시는 공통적으로 `source`(섹션 경로 + 행 범위), `line_start`/`line_end` 또는 `lines`, `line` 필드로 제공된다.
 
@@ -321,6 +321,30 @@
 | confirm / preview_id / simulate_failure | | | 주문등록과 같음 (실패 재현은 SMTP 451) |
 
 미리보기: 보내는 사람(sales@mcosmetic.co.kr), 받는 사람(마스터에 있으면 고객명·담당자 표시), 제목·본문, 연결 Case, `warnings`(마스터에 없는 주소, Case 고객과 다른 수신자, 서명 누락). 실행 결과: `mail: sent`, `messageId`, `sentAt`, `applied_changes`(발신 메일 기록 추가, Case 타임라인 추가).
+
+### 4.17 `erp_order_audit` — ERP 미등록·불일치 주문 점검 (조회 전용)
+| 파라미터 | 타입 | 기본값 | 설명 |
+|---|---|---|---|
+| date_from | string \| null | 스냅샷 달의 1일 | 주문 메일 수신일 시작 (YYYY-MM-DD) |
+| date_to | string \| null | 스냅샷 날짜 | 수신일 끝 (포함) |
+| customer | string \| null | null | 고객명 일부 또는 고객코드 |
+
+동작: 기간 내 수신 '주문(order)' 메일을 모두 찾아 연결된 Case의 Sales Order 번호를 ERP Sales Order 표(섹션 8)와 대조한다.
+| 분류 | 판단 기준 |
+|---|---|
+| ERP 미등록 — 전송 대기 | SO 없음, 오류·확인 필요 표시 없음 (예: ERP 전송대기) |
+| ERP 미등록 — ERP 전송 실패 | SO 없음 + 미해결 처리 오류 또는 주문등록 실패 기록 |
+| ERP 미등록 — 필수 정보 누락·확인 필요 | SO 없음 + 메일 상태 '확인 필요' 또는 Issues(누락 필드) |
+| ERP 반영 불일치 — 수량 변경 미반영 | SO는 있으나 고객이 요청한 수량과 ERP 주문 수량이 다름 |
+| SO 번호는 있으나 ERP Sales Order에 없음 | Case의 SO 번호가 섹션 8에 없음 |
+
+반환: `summary`(점검 건수, 정상 건수, 문제 건수, 분류별 건수, 미등록 예상 금액 합계), `problems[]`(메일 ID·수신일·고객·품목·요청 수량·납기·단가·예상 금액(부가세 포함)·Case 상태·담당자·사유·권장 다음 조치·관련 오류·근거 행), `registered_ok[]`(정상 등록 주문, 재시도 후 등록이면 `note`), `method`, `answer_guide`.
+예: 2026-11 → 11건 점검, 정상 7, 문제 4 (전송 대기 1, ERP 전송 실패 1, 필수 정보 누락 1, 수량 변경 미반영 1), 미등록 합계 13,117,500원.
+`ask_knowledge`는 질문이 'ERP 미등록/반영 안 된/누락된 주문' 유형이면 이 점검 결과를 `analysis`로 자동 첨부한다(질문의 'N월'을 기간으로 사용).
+
+### 4.18 답변 작성 가이드 (`answer_guide`)와 관련 맥락 (`case_context`)
+- ask_knowledge, search_knowledge, find_emails, find_cases, lookup_master, erp_order_audit 응답에 `answer_guide`를 넣는다: ① 한 줄 결론(핵심 숫자) ② 건별 표 ③ 건별 상세 ④ 근거(행 번호) ⑤ 권장 다음 조치. 서버 지침을 AI에게 전달하지 않는 플랫폼에서도 응답마다 같은 안내가 보이도록 하기 위함이다.
+- 검색 결과가 이메일·Case이면 `case_context`(Case 상태, 담당자, 품목·수량·단가·납기, SO 번호와 ERP 출하 상태·송장, 미해결 오류, 마지막 이벤트)를 함께 준다.
 
 ## 5. 오류 처리
 

@@ -33,7 +33,7 @@ MCP_Cosmetic/
   tests/e2e_check.py      실제 MCP 클라이언트로 stdio/HTTP 전체 도구 검증
   Dockerfile              클라우드 배포용
   docs/MCP_SPEC.md        MCP 명세서 (도구·파라미터·반환값·접속 사양)
-  docs/PROMPTS.md         예시 프롬프트 40개 + 심화 23개 (기대 답변 포함)
+  docs/PROMPTS.md         예시 프롬프트 40개 + 심화 25개 + ERP 12개 (기대 답변 포함)
   docs/TOOLS_FOR_AI.md    AI가 실제로 받는 서버 지침·도구 정의 (scripts/dump_tool_defs.py로 생성)
   .mcp.json               Claude Code 연결 설정 (git 제외)
 ```
@@ -61,6 +61,7 @@ MCP_Cosmetic/
 | `erp_sales_order_lookup` | [ERP 데모] Sales Order 조회: 인보이스 공급가·부가세·합계 | sales_order |
 | `erp_register_order` | [ERP 데모] 주문등록: **미리보기(반영 예정 데이터) → 승인 → 실행** | case_id (또는 customer/item/quantity…), confirm, preview_id |
 | `send_email` | [메일 데모] 메일 발송: **미리보기 → 승인 → 발송** | to, subject, body, case_id, confirm, preview_id |
+| `erp_order_audit` | [점검] 기간 내 주문 메일·Case를 ERP Sales Order와 대조 → 미등록(전송대기·실패·필수값 누락)·수량 불일치 건과 금액·담당자·다음 조치 | date_from, date_to, customer |
 
 서버 지침(instructions)과 각 도구 설명에 "반드시 근거를 인용하고, 없으면 '데이터셋에 없음'이라고 답하라"가 들어 있습니다.
 

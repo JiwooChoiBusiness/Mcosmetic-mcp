@@ -24,7 +24,10 @@ from mcp.server.mcpserver import MCPServer
 from mcp.server.mcpserver.exceptions import ToolError
 from mcp.types import ToolAnnotations
 
-from . import erp
+import calendar
+
+from . import audit, erp
+from .audit import AUDIT_INTENT
 from .kb import ID_PATTERNS, get_kb
 
 _KB0 = get_kb()
@@ -54,7 +57,21 @@ ERP·메일 실행 도구:
        preview_id로 같은 턴 안에서 바로 confirm=true를 호출한다. 이미 승인받은 내용을 다시 묻지 않는다.
    승인 전에는 '등록했다/보냈다'고 말하지 않는다. status가 blocked면 빠진 정보를 사용자에게 알리고 실행하지 않는다.
 9. 실행 결과는 응답의 message·orderResult·messageId·applied_changes를 근거로 보고한다.
+
+점검·대조 질문:
+10. 'ERP에 등록되지 않은/반영 안 된/누락된 주문', '주문등록 상태인데 ERP에 없는 건' 같은 질문은 erp_order_audit(기간, 고객)으로
+    메일·Case·ERP Sales Order를 대조한 결과를 근거로 답한다. 정상 등록된 건 수와 문제 건을 함께 보고한다.
+
+답변 작성 방식 (짧게 끝내지 말 것):
+11. 다음 구조로 충분히 자세히 답한다.
+    ① 한 줄 결론(건수·금액 등 핵심 숫자 포함) ② 표(건별: ID, 고객, 품목, 수량, 금액, 상태, 담당자)
+    ③ 건별 상세 설명(무엇이 문제인지, 원인, 관련 메일·Case·오류) ④ 근거(섹션·행 번호) ⑤ 권장 다음 조치.
+    도구 응답에 있는 수치·날짜·사유는 빠뜨리지 말고 모두 전달하고, 정상 건이 몇 건인지도 함께 밝힌다.
 """
+
+ANSWER_GUIDE = ("답변 작성: ① 한 줄 결론(핵심 숫자) ② 표로 건별 정리(ID·고객·품목·수량·금액·상태·담당자) "
+                "③ 건별 상세(원인·관련 메일/Case/오류) ④ 근거(섹션·행 번호) ⑤ 권장 다음 조치. "
+                "응답의 수치·날짜·사유를 빠짐없이 전달하고 짧게 요약만 하지 말 것.")
 
 mcp = MCPServer(name="mcosmetic-knowledge", title="M Cosmetic Knowledge", instructions=INSTRUCTIONS,
                 version="1.0.0")
@@ -89,7 +106,36 @@ def _hit(c, score: float | None = None, rank: int | None = None) -> dict[str, An
             d["same_thread"] = [f"{x.id} ({x.fields.get('Direction')}, {x.fields.get('Received')}) "
                                 f"{x.fields.get('Subject')}" for x in kb.emails.values()
                                 if x.fields.get("Thread ID") == th and x.id != e.id]
+        cid = e.fields.get("Case ID")
+        if cid in kb.cases:
+            d["case_context"] = _case_context(cid)
+    elif c.kind in ("case", "case_history") and c.record_id in kb.cases:
+        d["case_context"] = _case_context(c.record_id)
     return d
+
+
+def _case_context(cid: str) -> dict[str, Any]:
+    """Compact current state of a case: status, owner, order, ERP shipment, open errors."""
+    kb = get_kb()
+    c = kb.cases[cid]
+    f = c.fields
+    so = f.get("salesOrderNumber") or ""
+    row = kb.sales_orders.get(so)
+    try:
+        ent = json.loads(f.get("entity") or "{}")
+    except json.JSONDecodeError:
+        ent = {}
+    out = {"case_id": cid, "customer": f.get("customer"), "status": f.get("status"), "done": f.get("done"),
+           "assignedUser": f.get("assignedUser"), "item": ent.get("itemName"), "quantity": ent.get("quantity"),
+           "unitPrice": ent.get("unitPrice"), "deliveryDate": ent.get("deliveryDate"), "salesOrder": so or None,
+           "lastUpdated": f.get("lastUpdatedDate"), "last_event": c.timeline[-1] if c.timeline else None}
+    if row:
+        out["erp_sales_order"] = {"state": row["state"], "orderQty": row["orderQty"], "shipDate": row["shipDate"],
+                                  "tracking": row["tracking"] or None}
+    errs = [e["id"] + " " + e["message"] for e in kb.errors.values() if e.get("caseId") == cid and e["status"] == "open"]
+    if errs:
+        out["open_errors"] = errs
+    return out
 
 
 def _ids_in(text: str) -> list[str]:
@@ -115,7 +161,7 @@ def ask_knowledge(
     q = question.strip()
     if not q:
         raise ToolError("question이 비어 있습니다.")
-    hits = kb.search(q, top_k=top_k)
+    hits = kb.search(q, top_k=min(top_k, 3) if AUDIT_INTENT.search(q) else top_k)  # audit questions: analysis first
     linked: list[dict[str, Any]] = []
     for rid in _ids_in(q)[:5]:
         try:
@@ -124,14 +170,32 @@ def ask_knowledge(
             linked.append({"id": rid, "note": "데이터셋에서 이 ID를 찾지 못했습니다."})
     for name in _customer_names_in(q)[:2]:
         linked.append(_customer_bundle(name))
-    return {
-        "question": q,
+    out: dict[str, Any] = {"question": q}
+    if AUDIT_INTENT.search(q):
+        # reconciliation question: answer from the cross-check, not from loose text hits
+        d_from, d_to = _month_range(q)
+        a = audit.erp_order_audit(kb, d_from, d_to, (_customer_names_in(q) or [None])[0])
+        out["analysis"] = {"tool": "erp_order_audit", **a}
+    out.update({
         "evidence": [_hit(c, s, i + 1) for i, (c, s) in enumerate(hits)],
         "linked_records": linked,
-        "guidance": ("evidence/linked_records의 원문만 근거로 답하고 source(행 번호)를 인용하세요. "
-                     "근거가 부족하면 search_knowledge(다른 표현), grep_text(정확한 문구), "
+        "guidance": ("analysis가 있으면 그 결과(대조 결과)를 중심으로 답하세요. evidence/linked_records의 원문만 근거로 답하고 "
+                     "source(행 번호)를 인용하세요. 근거가 부족하면 search_knowledge(다른 표현), grep_text(정확한 문구), "
                      "find_emails/find_cases(개수·목록)로 추가 확인하고, 그래도 없으면 '데이터셋에 없음'이라고 답하세요."),
-    }
+        "answer_guide": ANSWER_GUIDE,
+    })
+    return out
+
+
+def _month_range(q: str) -> tuple[str | None, str | None]:
+    """'11월' -> 2026-11-01 ~ 2026-11-30 (year of the snapshot); no month -> audit default (snapshot month)."""
+    m = re.search(r"(\d{1,2})\s*월", q)
+    if not m or not 1 <= int(m.group(1)) <= 12:
+        return None, None
+    year = (get_kb().snapshot_date or "2026")[:4]
+    mm = int(m.group(1))
+    last = calendar.monthrange(int(year), mm)[1]
+    return f"{year}-{mm:02d}-01", f"{year}-{mm:02d}-{last:02d}"
 
 
 @mcp.tool(annotations=_RO)
@@ -147,7 +211,23 @@ def search_knowledge(
     if kind and kind not in {"email", "case", "row", "table", "paragraph"}:
         raise ToolError("kind는 email, case, row, table, paragraph 중 하나여야 합니다.")
     hits = kb.search(query, top_k=top_k, section=section, kind=kind)
-    return {"query": query, "count": len(hits), "results": [_hit(c, s, i + 1) for i, (c, s) in enumerate(hits)]}
+    return {"query": query, "count": len(hits), "results": [_hit(c, s, i + 1) for i, (c, s) in enumerate(hits)],
+            "answer_guide": ANSWER_GUIDE}
+
+
+@mcp.tool(title="ERP 미등록·불일치 주문 점검", annotations=_RO)
+def erp_order_audit(
+    date_from: Annotated[str | None, Field(description="주문 메일 수신일 시작 YYYY-MM-DD (생략 시 스냅샷 날짜가 속한 달의 1일)")] = None,
+    date_to: Annotated[str | None, Field(description="수신일 끝 YYYY-MM-DD, 포함 (생략 시 스냅샷 날짜)")] = None,
+    customer: Annotated[str | None, Field(description="고객명 일부 또는 고객코드 (선택)")] = None,
+) -> dict[str, Any]:
+    """[점검] 기간 내 '주문(order)' 메일과 업무 Case를 ERP Sales Order 표와 대조해, ERP에 등록되지 않았거나 다르게 반영된 주문을 찾는다.
+    '주문등록 상태인데 실제 ERP에 없는 주문', 'ERP 미등록/누락/불일치 주문', 'ERP 반영 안 된 건' 질문에 사용.
+    문제 건마다 사유 분류(전송 대기 / ERP 전송 실패 / 필수 정보 누락 / 수량 변경 미반영), 고객·품목·수량·단가·예상 금액(부가세 포함),
+    담당자, 관련 Case·오류, 권장 다음 조치, 근거 행을 돌려주고, 정상 등록된 주문 목록과 집계도 함께 준다."""
+    out = audit.erp_order_audit(get_kb(), date_from, date_to, customer)
+    out["answer_guide"] = ANSWER_GUIDE
+    return out
 
 
 @mcp.tool(annotations=_RO)
@@ -247,6 +327,7 @@ def find_emails(
         "emails": [kb.email_summary(e) for e in rows[:limit]],
         "truncated": len(rows) > limit,
         "resolved_customer_codes": cust_codes,
+        "answer_guide": ANSWER_GUIDE,
     }
 
 
@@ -304,6 +385,7 @@ def find_cases(
         "by_done": dict(Counter(c.fields.get("done", "") for c in out)),
         "cases": [kb.case_summary(c) for c in out[:limit]],
         "truncated": len(out) > limit,
+        "answer_guide": ANSWER_GUIDE,
     }
 
 
@@ -354,7 +436,7 @@ def lookup_master(
                  if kb.L(i).strip() and (not kw or kw in kb.L(i).lower())]
         return {"table": t, "section": f"{s.number}. {s.title}", "lines": f"{s.line_start}-{s.line_end}",
                 "rows": lines}
-    return {"table": t, "count": len(rows), "rows": rows}
+    return {"table": t, "count": len(rows), "rows": rows, "answer_guide": ANSWER_GUIDE}
 
 
 @mcp.tool(annotations=_RO)

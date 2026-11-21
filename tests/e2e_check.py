@@ -23,7 +23,7 @@ PY = sys.executable
 EXPECTED_TOOLS = {"ask_knowledge", "search_knowledge", "get_record", "find_emails", "find_cases",
                   "lookup_master", "grep_text", "read_lines", "list_topics",
                   "erp_price_lookup", "erp_inventory_lookup", "erp_shipment_lookup", "erp_sales_order_lookup",
-                  "erp_register_order", "send_email"}
+                  "erp_register_order", "send_email", "erp_order_audit"}
 
 
 def payload(res) -> dict:
@@ -121,6 +121,11 @@ async def exercise(session: ClientSession, label: str) -> list[str]:
     p = await call("send_email", mail)
     d = await call("send_email", {**mail, "confirm": True, "preview_id": p["preview_id"]})
     ok("send_email preview -> sent", p["status"] == "preview" and d["mail"] == "sent" and d["messageId"].startswith("MSG-"))
+
+    r = await call("erp_order_audit", {"date_from": "2026-11-01", "date_to": "2026-11-30"})
+    ok("erp_order_audit November: 11 checked / 4 problems", r["summary"]["order_mails_checked"] == 11 and r["summary"]["problems"] == 4)
+    r = await call("ask_knowledge", {"question": "ERP 에이전트에서 11월 주문등록 상태이지만 실제 ERP에 등록되지 않은 데이터를 찾아줘."})
+    ok("ask_knowledge attaches audit analysis", r.get("analysis", {}).get("summary", {}).get("problems") == 4 and "answer_guide" in r)
 
     bad = await session.call_tool("get_record", {"record_id": "E-9999"})
     ok("unknown id -> is_error with message", bad.is_error and "찾지 못했습니다" in bad.content[0].text)
